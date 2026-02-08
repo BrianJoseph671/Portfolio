@@ -1,58 +1,99 @@
+import { useState, useEffect } from 'react'
+
+const THEME_KEY = 'portfolio-theme'
+
 function App() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.localStorage.getItem(THEME_KEY) || 'dark'
+    }
+    return 'dark'
+  })
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'light') {
+      root.classList.add('light')
+    } else {
+      root.classList.remove('light')
+    }
+    window.localStorage.setItem(THEME_KEY, theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
+
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5]">
+    <div className="min-h-screen theme-bg theme-text">
+      {/* Theme toggle — top right */}
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="fixed top-6 right-6 z-10 p-2 rounded-full theme-icon transition-colors theme-toggle-ring"
+        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {theme === 'dark' ? (
+          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        )}
+      </button>
+
       {/* Section 1: Hero */}
       <section
-        className="animate-section-fade pt-20 pb-16 px-6 sm:px-8 md:pt-28 md:pb-24"
+        className="animate-section-fade pt-20 pb-0 px-6 sm:px-8 md:pt-28"
         style={{ animationDelay: '0ms' }}
       >
         <div className="max-w-[720px] mx-auto">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-8">
             Brian Joseph
           </h1>
-          <p className="text-lg sm:text-[19px] font-normal text-[#F5F5F5] leading-relaxed max-w-[560px]">
-            First principles thinker who loves to build AI agents and workflow systems (esp for sales and GTM).
+          <p className="text-lg sm:text-[19px] font-normal theme-text leading-relaxed max-w-[560px]">
+            I build AI agents and workflow automations for sales and GTM.
           </p>
-          <p className="text-lg sm:text-[19px] font-normal text-[#F5F5F5] leading-relaxed mt-7 max-w-[560px]">
-            Looking for an SDR role at a high-growth startup.
+          <p className="text-lg sm:text-[19px] font-normal theme-text leading-relaxed mt-7 max-w-[560px]">
+            Looking for an SDR/GTM role at a high-growth startup in SF.
           </p>
         </div>
       </section>
 
       {/* Section 2: Projects */}
       <section
-        className="animate-section-fade py-16 sm:py-20 px-6 sm:px-8"
+        className="animate-section-fade pt-16 pb-16 sm:pb-20 px-6 sm:px-8"
         style={{ animationDelay: '120ms' }}
       >
         <div className="max-w-[720px] mx-auto">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#F5F5F5] mb-10 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold theme-text mb-10 sm:mb-12">
             What I built
           </h2>
 
           <div className="space-y-6 sm:space-y-8">
             {/* Card 1: Outbound OS */}
-            <article className="rounded-xl border border-[#1E1E1E] bg-[#111111] p-6 sm:p-8 transition-all duration-200 hover:border-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
-              <h2 className="text-xl font-semibold text-[#F5F5F5] mb-2">
+            <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
+              <h2 className="text-xl font-semibold theme-text mb-2">
                 Outbound OS
               </h2>
-              <p className="text-[#999999] text-base leading-relaxed mb-5">
+              <p className="theme-text-muted text-base leading-relaxed mb-5">
                 AI-powered prospect research pipeline. Ingests a name and company, returns a full research brief with personalized outreach angles.
               </p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
                 <div>
-                  <span className="text-[#3B82F6] font-semibold">20 min → 30 sec</span>
-                  <span className="text-[#999999] text-sm ml-1">research time</span>
+                  <span className="theme-accent font-semibold">20 min → 30 sec</span>
+                  <span className="theme-text-muted text-sm ml-1">research time</span>
                 </div>
                 <div>
-                  <span className="text-[#3B82F6] font-semibold">44.6% meeting rate</span>
-                  <span className="text-[#999999] text-sm ml-1">across 83 prospects</span>
+                  <span className="theme-accent font-semibold">44.6% meeting rate</span>
+                  <span className="theme-text-muted text-sm ml-1">across 83 prospects</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 {['n8n', 'Claude API', 'Serper', 'Google Sheets'].map((tag) => (
                   <span
                     key={tag}
-                    className="px-3 py-1 rounded-md text-xs font-medium text-[#999999] bg-[#1A1A1A] border border-[#1E1E1E]"
+                    className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
                   >
                     {tag}
                   </span>
@@ -61,24 +102,35 @@ function App() {
               {/* Optional: <a href="#" className="text-[#3B82F6] text-sm font-medium mt-4 inline-block hover:underline">View Demo →</a> */}
             </article>
 
-            {/* Card 2: GTM Workflow Automations */}
-            <article className="rounded-xl border border-[#1E1E1E] bg-[#111111] p-6 sm:p-8 transition-all duration-200 hover:border-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
-              <h2 className="text-xl font-semibold text-[#F5F5F5] mb-2">
-                GTM Workflow Automations
-              </h2>
-              <p className="text-[#999999] text-base leading-relaxed mb-5">
-                Suite of n8n workflows that automate lead enrichment, CRM updates, and follow-up sequencing.
+            {/* Card 2: Smart Flow */}
+            <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
+              <div className="flex flex-wrap items-baseline gap-2 mb-2">
+                <h2 className="text-xl font-semibold theme-text">
+                  Smart Flow
+                </h2>
+                <a
+                  href="https://github.com/BrianJoseph671/SmartFlow"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm theme-accent hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--focus-offset)] rounded"
+                >
+                  github.com/BrianJoseph671/SmartFlow
+                </a>
+              </div>
+              <p className="theme-text-muted text-base leading-relaxed mb-5">
+                AI agent that automates inbound lead qualification, scheduling, and data syncing for HVAC service firms.
               </p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
                 <div>
-                  <span className="text-[#3B82F6] font-semibold">X hours saved per week</span>
+                  <span className="theme-accent font-semibold">25% reduction</span>
+                  <span className="theme-text-muted text-sm ml-1">in scheduling and outreach workload</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {['n8n', 'OpenAI', 'PostgreSQL'].map((tag) => (
+                {['TypeScript', 'React', 'n8n', 'Cursor'].map((tag) => (
                   <span
                     key={tag}
-                    className="px-3 py-1 rounded-md text-xs font-medium text-[#999999] bg-[#1A1A1A] border border-[#1E1E1E]"
+                    className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
                   >
                     {tag}
                   </span>
@@ -86,19 +138,65 @@ function App() {
               </div>
             </article>
 
-            {/* Card 3: This Site */}
-            <article className="rounded-xl border border-[#1E1E1E] bg-[#111111] p-6 sm:p-8 transition-all duration-200 hover:border-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]">
-              <h2 className="text-xl font-semibold text-[#F5F5F5] mb-2">
-                This Site
+            {/* Card 3: LinkedIn Poster */}
+            <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
+              <h2 className="text-xl font-semibold theme-text mb-2">
+                LinkedIn Poster
               </h2>
-              <p className="text-[#999999] text-base leading-relaxed mb-5">
-                Built with React + Tailwind. Designed to be scanned in 15 seconds.
+              <p className="theme-text-muted text-base leading-relaxed mb-5">
+                AI content agent that generates personalized LinkedIn posts from research inputs and topic briefs.
               </p>
+              <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
+                <div>
+                  <span className="theme-accent font-semibold">70% faster</span>
+                  <span className="theme-text-muted text-sm ml-1">drafting time (40 min → 12 min)</span>
+                </div>
+                <div>
+                  <span className="theme-accent font-semibold">2x post output</span>
+                  <span className="theme-text-muted text-sm ml-1">with 11% engagement increase</span>
+                </div>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {['React', 'Tailwind CSS', 'Vite', 'Vercel'].map((tag) => (
+                {['n8n', 'Airtable', 'Claude Code'].map((tag) => (
                   <span
                     key={tag}
-                    className="px-3 py-1 rounded-md text-xs font-medium text-[#999999] bg-[#1A1A1A] border border-[#1E1E1E]"
+                    className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </article>
+
+            {/* Card 4: SpikeSense */}
+            <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
+              <div className="flex flex-wrap items-baseline gap-2 mb-2">
+                <h2 className="text-xl font-semibold theme-text">
+                  SpikeSense
+                </h2>
+                <a
+                  href="https://github.com/BrianJoseph671/SpikeSense"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm theme-accent hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--focus-offset)] rounded"
+                >
+                  github.com/BrianJoseph671/SpikeSense
+                </a>
+              </div>
+              <p className="theme-text-muted text-base leading-relaxed mb-5">
+                Forecasts overdose spike risk and automates targeted public-health resource deployment across county-level data.
+              </p>
+              <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
+                <div>
+                  <span className="theme-accent font-semibold">3 data pipelines</span>
+                  <span className="theme-text-muted text-sm ml-1">integrated for real-time risk scoring</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {['TypeScript', 'React', 'Python', 'Replit'].map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
                   >
                     {tag}
                   </span>
@@ -115,10 +213,10 @@ function App() {
         style={{ animationDelay: '240ms' }}
       >
         <div className="max-w-[640px] mx-auto">
-          <p className="text-[#999999] text-base sm:text-lg leading-relaxed text-left">
-            Taught myself <span className="text-[#F5F5F5] font-medium">n8n, Claude Code, Cursor, Clay, Replit</span>, and workflow automation to build systems focused on outcomes rather than output.
+          <p className="theme-text-muted text-base sm:text-lg leading-relaxed text-left">
+            Taught myself <span className="theme-text font-medium">n8n, Claude Code, Cursor, Clay, Replit</span>, and workflow automation to build systems focused on outcomes rather than output.
           </p>
-          <p className="text-[#999999] text-base sm:text-lg leading-relaxed text-left mt-6">
+          <p className="theme-text-muted text-base sm:text-lg leading-relaxed text-left mt-6">
             Excited to join a team building world class GTM systems. Ready to learn and iterate fast.
           </p>
         </div>
@@ -126,7 +224,7 @@ function App() {
 
       {/* Section 4: Footer — icon links only */}
       <footer
-        className="animate-section-fade py-12 sm:py-16 px-6 sm:px-8 border-t border-[#1E1E1E]"
+        className="animate-section-fade py-12 sm:py-16 px-6 sm:px-8 border-t theme-footer-border"
         style={{ animationDelay: '360ms' }}
       >
         <div className="max-w-[720px] mx-auto text-center">
@@ -135,7 +233,7 @@ function App() {
               href="https://github.com/BrianJoseph671"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#999999] hover:text-[#3B82F6] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0A0A0A] rounded-full p-1"
+              className="theme-icon transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--focus-offset)] rounded-full p-1"
               aria-label="GitHub"
             >
               <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -146,7 +244,7 @@ function App() {
               href="https://www.linkedin.com/in/brianmathewjoseph/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#999999] hover:text-[#3B82F6] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0A0A0A] rounded-full p-1"
+              className="theme-icon transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--focus-offset)] rounded-full p-1"
               aria-label="LinkedIn"
             >
               <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -155,7 +253,7 @@ function App() {
             </a>
             <a
               href="mailto:josephbrian671@gmail.com"
-              className="text-[#999999] hover:text-[#3B82F6] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0A0A0A] rounded-full p-1"
+              className="theme-icon transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--focus-offset)] rounded-full p-1"
               aria-label="Email"
             >
               <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -163,7 +261,7 @@ function App() {
               </svg>
             </a>
           </div>
-          <p className="text-sm text-[#999999]">
+          <p className="text-sm theme-text-muted">
             Guam since birth, Notre Dame through luck, SF by choice
           </p>
         </div>
