@@ -10,11 +10,11 @@ function App() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-5">
             Brian Joseph
           </h1>
-          <p className="text-lg sm:text-[19px] font-medium text-[#F5F5F5] leading-relaxed max-w-[560px]">
+          <p className="text-lg sm:text-[19px] font-normal text-[#F5F5F5] leading-relaxed max-w-[560px]">
             First principles thinker who loves to build AI agents and workflow systems (esp for sales and GTM).
           </p>
-          <p className="text-lg sm:text-[19px] font-medium text-[#F5F5F5] leading-relaxed mt-2 max-w-[560px]">
-            Looking for an SDR role at a high-growth startup, preferrably in SF.
+          <p className="text-lg sm:text-[19px] font-normal text-[#F5F5F5] leading-relaxed mt-5 max-w-[560px]">
+            Looking for an SDR role at a high-growth startup.
           </p>
         </div>
       </section>
@@ -26,7 +26,7 @@ function App() {
       >
         <div className="max-w-[720px] mx-auto">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#F5F5F5] mb-10 sm:mb-12">
-            Fun Projects I built
+            What I built
           </h2>
 
           <div className="space-y-6 sm:space-y-8">
@@ -116,7 +116,10 @@ function App() {
       >
         <div className="max-w-[640px] mx-auto">
           <p className="text-[#999999] text-base sm:text-lg leading-relaxed text-left">
-            Taught myself <span className="text-[#F5F5F5] font-medium">n8n, Claude Code, Cursor, Clay, Replit</span>, and workflow automation to build systems focused on outcomes rather than output. I'm looking for a team where I can learn GTM execution and earn my way up.
+            Taught myself <span className="text-[#F5F5F5] font-medium">n8n, Claude Code, Cursor, Clay, Replit</span>, and workflow automation to build systems focused on outcomes rather than output.
+          </p>
+          <p className="text-[#999999] text-base sm:text-lg leading-relaxed text-left">
+            Excited to join a team building world class GTM systems. Ready to learn and iterate fast.
           </p>
         </div>
       </section>
