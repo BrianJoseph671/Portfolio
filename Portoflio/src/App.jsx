@@ -174,15 +174,7 @@ function App() {
                 <h2 className="text-xl font-semibold theme-text">
                   SpikeSense
                 </h2>
-                <a
-                  href="https://github.com/BrianJoseph671/SpikeSense"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm theme-accent hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--focus-offset)] rounded"
-                >
-                  github.com/BrianJoseph671/SpikeSense
-                </a>
-              </div>
+                </div>
               <p className="theme-text-muted text-base leading-relaxed mb-5">
                 Forecasts overdose spike risk and automates targeted public-health resource deployment across county-level data.
               </p>
