@@ -73,9 +73,22 @@ function App() {
           <div className="space-y-6 sm:space-y-8">
             {/* Card 1: Outbound OS */}
             <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
-              <h2 className="text-xl font-semibold theme-text mb-2">
-                Outbound OS
-              </h2>
+              <div className="flex justify-between items-start gap-4 mb-2">
+                <h2 className="text-xl font-semibold theme-text">
+                  Outbound OS
+                </h2>
+                <a
+                  href="https://github.com/BrianJoseph671/OutboundOS"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 p-1 rounded theme-text-muted hover:opacity-100 opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded-full"
+                  aria-label="Outbound OS on GitHub"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                  </svg>
+                </a>
+              </div>
               <p className="theme-text-muted text-base leading-relaxed mb-5">
                 AI-powered prospect research pipeline. Ingests a name and company, returns a full research brief with personalized outreach angles.
               </p>
@@ -99,12 +112,24 @@ function App() {
                   </span>
                 ))}
               </div>
-              {/* Optional: <a href="#" className="text-[#3B82F6] text-sm font-medium mt-4 inline-block hover:underline">View Demo →</a> */}
+              <div className="flex justify-end mt-4">
+                {/* Outbound OS demo: replace href with your demo URL */}
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs theme-text-muted hover:opacity-100 opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded"
+                  aria-label="Outbound OS demo"
+                >
+                  <span className="text-[0.65rem] leading-none" aria-hidden>▶</span>
+                  Demo
+                </a>
+              </div>
             </article>
 
             {/* Card 2: Smart Flow */}
             <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
-              <div className="flex flex-wrap items-baseline gap-2 mb-2">
+              <div className="flex justify-between items-start gap-4 mb-2">
                 <h2 className="text-xl font-semibold theme-text">
                   Smart Flow
                 </h2>
@@ -112,9 +137,12 @@ function App() {
                   href="https://github.com/BrianJoseph671/SmartFlow"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm theme-accent hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--focus-offset)] rounded"
+                  className="shrink-0 p-1 rounded theme-text-muted hover:opacity-100 opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded-full"
+                  aria-label="Smart Flow on GitHub"
                 >
-                  github.com/BrianJoseph671/SmartFlow
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                  </svg>
                 </a>
               </div>
               <p className="theme-text-muted text-base leading-relaxed mb-5">
@@ -166,15 +194,39 @@ function App() {
                   </span>
                 ))}
               </div>
+              <div className="flex justify-end mt-4">
+                {/* LinkedIn Poster demo: replace href with your demo URL */}
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs theme-text-muted hover:opacity-100 opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded"
+                  aria-label="LinkedIn Poster demo"
+                >
+                  <span className="text-[0.65rem] leading-none" aria-hidden>▶</span>
+                  Demo
+                </a>
+              </div>
             </article>
 
             {/* Card 4: SpikeSense */}
             <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
-              <div className="flex flex-wrap items-baseline gap-2 mb-2">
+              <div className="flex justify-between items-start gap-4 mb-2">
                 <h2 className="text-xl font-semibold theme-text">
                   SpikeSense
                 </h2>
-                </div>
+                <a
+                  href="https://github.com/BrianJoseph671/SpikeSense"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 p-1 rounded theme-text-muted hover:opacity-100 opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded-full"
+                  aria-label="SpikeSense on GitHub"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                  </svg>
+                </a>
+              </div>
               <p className="theme-text-muted text-base leading-relaxed mb-5">
                 Forecasts overdose spike risk and automates targeted public-health resource deployment across county-level data.
               </p>
@@ -193,6 +245,19 @@ function App() {
                     {tag}
                   </span>
                 ))}
+              </div>
+              <div className="flex justify-end mt-4">
+                {/* SpikeSense demo: replace href with your demo URL */}
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs theme-text-muted hover:opacity-100 opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded"
+                  aria-label="SpikeSense demo"
+                >
+                  <span className="text-[0.65rem] leading-none" aria-hidden>▶</span>
+                  Demo
+                </a>
               </div>
             </article>
           </div>
