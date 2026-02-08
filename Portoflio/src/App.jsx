@@ -62,7 +62,7 @@ function App() {
 
       {/* Section 2: Projects */}
       <section
-        className="animate-section-fade pt-16 pb-0 px-6 sm:px-8"
+        className="animate-section-fade pt-16 pb-8 px-6 sm:px-8"
         style={{ animationDelay: '120ms' }}
       >
         <div className="max-w-[720px] mx-auto">
