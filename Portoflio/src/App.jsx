@@ -5,9 +5,9 @@ const THEME_KEY = 'portfolio-theme'
 function App() {
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.localStorage.getItem(THEME_KEY) || 'dark'
+      return window.localStorage.getItem(THEME_KEY) || 'light'
     }
-    return 'dark'
+    return 'light'
   })
 
   useEffect(() => {
@@ -62,7 +62,7 @@ function App() {
 
       {/* Section 2: Projects */}
       <section
-        className="animate-section-fade pt-16 pb-16 sm:pb-20 px-6 sm:px-8"
+        className="animate-section-fade pt-16 pb-0 px-6 sm:px-8"
         style={{ animationDelay: '120ms' }}
       >
         <div className="max-w-[720px] mx-auto">
@@ -207,24 +207,9 @@ function App() {
         </div>
       </section>
 
-      {/* Section 3: Background */}
-      <section
-        className="animate-section-fade py-16 sm:py-20 px-6 sm:px-8"
-        style={{ animationDelay: '240ms' }}
-      >
-        <div className="max-w-[640px] mx-auto">
-          <p className="theme-text-muted text-base sm:text-lg leading-relaxed text-left">
-            Taught myself <span className="theme-text font-medium">n8n, Claude Code, Cursor, Clay, Replit</span>, and workflow automation to build systems focused on outcomes rather than output.
-          </p>
-          <p className="theme-text-muted text-base sm:text-lg leading-relaxed text-left mt-6">
-            Excited to join a team building world class GTM systems. Ready to learn and iterate fast.
-          </p>
-        </div>
-      </section>
-
-      {/* Section 4: Footer — icon links only */}
+      {/* Footer — icon links + tagline */}
       <footer
-        className="animate-section-fade py-12 sm:py-16 px-6 sm:px-8 border-t theme-footer-border"
+        className="animate-section-fade pt-12 pb-12 sm:pb-16 px-6 sm:px-8 border-t theme-footer-border"
         style={{ animationDelay: '360ms' }}
       >
         <div className="max-w-[720px] mx-auto text-center">
