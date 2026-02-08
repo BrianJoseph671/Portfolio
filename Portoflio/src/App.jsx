@@ -103,7 +103,7 @@ function App() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {['n8n', 'Claude API', 'Serper', 'Google Sheets'].map((tag) => (
+                {['n8n','Cursor','Claude Code','Replit','Serper','Airtable','Clay'].map((tag) => (
                   <span
                     key={tag}
                     className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
@@ -155,7 +155,7 @@ function App() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {['TypeScript', 'React', 'n8n', 'Cursor'].map((tag) => (
+                {['n8n', 'Cursor', 'Claude Code', 'Replit', 'Google Sheets'].map((tag) => (
                   <span
                     key={tag}
                     className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
@@ -185,7 +185,7 @@ function App() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {['n8n', 'Airtable', 'Claude Code'].map((tag) => (
+                {['n8n', 'Airtable', 'Cursor', 'Claude Code'].map((tag) => (
                   <span
                     key={tag}
                     className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
@@ -237,7 +237,7 @@ function App() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {['TypeScript', 'React', 'Python', 'Replit'].map((tag) => (
+                {['Replit', 'Cursor', 'Python'].map((tag) => (
                   <span
                     key={tag}
                     className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
