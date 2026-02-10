@@ -115,7 +115,7 @@ function App() {
               <div className="flex justify-end mt-4">
                 {/* Outbound OS demo: replace href with your demo URL */}
                 <a
-                  href="#"
+                  href="https://drive.google.com/file/d/1sTIIPDmxJZxiHjXrVUVmV9ZcnLJSPjzM/view?usp=drive_link"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs theme-text-muted hover:opacity-100 opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded"
