@@ -75,7 +75,14 @@ function App() {
             <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
               <div className="flex justify-between items-start gap-4 mb-2">
                 <h2 className="text-xl font-semibold theme-text">
-                  Outbound OS
+                  <a
+                    href="https://networker-master.replit.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    Outbound OS
+                  </a>
                 </h2>
                 <a
                   href="https://github.com/BrianJoseph671/OutboundOS"
@@ -213,7 +220,14 @@ function App() {
             <article className="rounded-xl border theme-card p-6 sm:p-8 transition-all duration-200 theme-card-hover">
               <div className="flex justify-between items-start gap-4 mb-2">
                 <h2 className="text-xl font-semibold theme-text">
-                  SpikeSense
+                  <a
+                    href="https://overdose-spike-predictor-josephbrian671.replit.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    SpikeSense
+                  </a>
                 </h2>
                 <a
                   href="https://github.com/BrianJoseph671/SpikeSense"
