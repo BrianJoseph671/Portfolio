@@ -226,19 +226,6 @@ function App() {
                   </span>
                 ))}
               </div>
-              <div className="flex justify-end mt-4">
-                {/* LinkedIn Poster demo: replace href with your demo URL */}
-                <a
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs theme-text-muted hover:opacity-100 opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded"
-                  aria-label="LinkedIn Poster demo"
-                >
-                  <span className="text-[0.65rem] leading-none" aria-hidden>▶</span>
-                  Demo
-                </a>
-              </div>
             </article>
 
             {/* Card 4: SpikeSense */}
@@ -284,19 +271,6 @@ function App() {
                     {tag}
                   </span>
                 ))}
-              </div>
-              <div className="flex justify-end mt-4">
-                {/* SpikeSense demo: replace href with your demo URL */}
-                <a
-                  href="#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs theme-text-muted hover:opacity-100 opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--card-bg)] rounded"
-                  aria-label="SpikeSense demo"
-                >
-                  <span className="text-[0.65rem] leading-none" aria-hidden>▶</span>
-                  Demo
-                </a>
               </div>
             </article>
           </div>
