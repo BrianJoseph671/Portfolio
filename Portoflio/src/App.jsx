@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 
 const THEME_KEY = 'portfolio-theme'
 
@@ -321,6 +322,7 @@ function App() {
           </p>
         </div>
       </footer>
+      <Analytics />
     </div>
   )
 }
