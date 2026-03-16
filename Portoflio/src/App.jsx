@@ -52,7 +52,7 @@ function App() {
             Brian Joseph
           </h1>
           <p className="text-lg sm:text-[19px] font-normal theme-text leading-relaxed max-w-[560px]">
-            I build agents and workflow automations for sales and GTM.
+            I build AI agents and workflow automations for sales and GTM.
           </p>
           <p className="text-lg sm:text-[19px] font-normal theme-text leading-relaxed mt-7 max-w-[560px]">
             Looking for an SDR/GTM role at a high-growth startup.
