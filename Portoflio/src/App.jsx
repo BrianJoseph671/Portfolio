@@ -101,11 +101,11 @@ function App() {
               </p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
                 <div>
-                  <span className="theme-accent font-semibold">20 min → 30 sec</span>
-                  <span className="theme-text-muted text-sm ml-1">research time</span>
+                  <span className="theme-accent font-semibold">40x faster</span>
+                  <span className="theme-text-muted text-sm ml-1">prospecting velocity (20 min → 30 sec)</span>
                 </div>
                 <div>
-                  <span className="theme-accent font-semibold">11.7% ↑ meetings booked</span>
+                  <span className="theme-accent font-semibold">26.7% ↑ meetings booked</span>
                   <span className="theme-text-muted text-sm ml-1">across 83 prospects</span>
                 </div>
               </div>
