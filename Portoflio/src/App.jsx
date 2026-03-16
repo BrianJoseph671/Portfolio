@@ -162,7 +162,7 @@ function App() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {['n8n', 'Cursor', 'Claude Code', 'Replit', 'Google Sheets', 'Vapi'].map((tag) => (
+                {['n8n', 'Cursor', 'Claude Code', 'Replit', 'Google Sheets', 'Vapi', 'Factory AI'].map((tag) => (
                   <span
                     key={tag}
                     className="px-3 py-1 rounded-md text-xs font-medium theme-tag border"
