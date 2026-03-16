@@ -105,7 +105,7 @@ function App() {
                   <span className="theme-text-muted text-sm ml-1">research time</span>
                 </div>
                 <div>
-                  <span className="theme-accent font-semibold">44.6% meeting rate</span>
+                  <span className="theme-accent font-semibold">11.7% ↑ meetings booked</span>
                   <span className="theme-text-muted text-sm ml-1">across 83 prospects</span>
                 </div>
               </div>
