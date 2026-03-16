@@ -52,7 +52,7 @@ function App() {
             Brian Joseph
           </h1>
           <p className="text-lg sm:text-[19px] font-normal theme-text leading-relaxed max-w-[560px]">
-            I build agents and workflow automations for sales and GTM.
+            I build AI agents and workflow automations for sales and GTM.
           </p>
           <p className="text-lg sm:text-[19px] font-normal theme-text leading-relaxed mt-7 max-w-[560px]">
             Looking for an SDR/GTM role at a high-growth startup.
@@ -153,7 +153,7 @@ function App() {
                 </a>
               </div>
               <p className="theme-text-muted text-base leading-relaxed mb-5">
-                Agent that automates inbound lead qualification, scheduling, and data syncing for HVAC service firms.
+                AI agent that automates inbound lead qualification, scheduling, and data syncing for HVAC service firms.
               </p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
                 <div>
@@ -204,7 +204,7 @@ function App() {
                 </a>
               </div>
               <p className="theme-text-muted text-base leading-relaxed mb-5">
-                Content agent that generates personalized LinkedIn posts from research inputs and topic briefs.
+                AI content agent that generates personalized LinkedIn posts from research inputs and topic briefs.
               </p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
                 <div>
