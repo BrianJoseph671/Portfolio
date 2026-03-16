@@ -106,7 +106,7 @@ function App() {
                 </div>
                 <div>
                   <span className="theme-accent font-semibold">26.7% ↑ meetings booked</span>
-                  <span className="theme-text-muted text-sm ml-1">across 83 prospects</span>
+                  <span className="theme-text-muted text-sm ml-1">across 134 prospects</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
