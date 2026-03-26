@@ -49,7 +49,7 @@ function App() {
       >
         <div className="max-w-[720px] mx-auto">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-8">
-            Brian Joseph
+            Brian M Joseph
           </h1>
           <p className="text-lg sm:text-[19px] font-normal theme-text leading-relaxed max-w-[560px]">
             I build AI agents and workflow automations for sales and GTM.
