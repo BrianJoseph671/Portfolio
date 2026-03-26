@@ -25,5 +25,8 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Cursor (local rules, not for repo)
+.cursor/
+
 # Vite
 *.local
