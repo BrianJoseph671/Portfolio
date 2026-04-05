@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { GitHubContributionGrid } from './GitHubContributionGrid.jsx'
 
 const THEME_KEY = 'portfolio-theme'
 
@@ -283,6 +284,7 @@ function App() {
         style={{ animationDelay: '360ms' }}
       >
         <div className="max-w-[720px] mx-auto text-center">
+          <GitHubContributionGrid />
           <div className="flex justify-center items-center gap-8 mb-6">
             <a
               href="https://github.com/BrianJoseph671"
