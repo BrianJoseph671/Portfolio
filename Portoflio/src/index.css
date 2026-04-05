@@ -12,6 +12,11 @@
   --tag-bg: #1A1A1A;
   --footer-border: #1E1E1E;
   --focus-offset: #0A0A0A;
+  --contrib-0: #2d2d2d;
+  --contrib-1: #0e4429;
+  --contrib-2: #006d32;
+  --contrib-3: #26a641;
+  --contrib-4: #39d353;
 }
 
 html.light {
@@ -26,6 +31,11 @@ html.light {
   --tag-bg: #f5f5f5;
   --footer-border: #e5e5e5;
   --focus-offset: #fafafa;
+  --contrib-0: #ebedf0;
+  --contrib-1: #9be9a8;
+  --contrib-2: #40c463;
+  --contrib-3: #30a14e;
+  --contrib-4: #216e39;
 }
 
 html {
@@ -79,3 +89,52 @@ body {
 }
 .theme-icon { color: var(--text-muted); }
 .theme-icon:hover { color: var(--accent); }
+
+/* GitHub-style contribution heatmap */
+.gh-contrib-cell {
+  width: 11px;
+  height: 11px;
+  min-width: 11px;
+  min-height: 11px;
+  display: block;
+}
+
+.gh-contrib-l0 { background-color: var(--contrib-0); }
+.gh-contrib-l1 { background-color: var(--contrib-1); }
+.gh-contrib-l2 { background-color: var(--contrib-2); }
+.gh-contrib-l3 { background-color: var(--contrib-3); }
+.gh-contrib-l4 { background-color: var(--contrib-4); }
+
+@keyframes ghContribDisintegrate {
+  to {
+    opacity: 0;
+    transform: translateY(14px) rotate(18deg) scale(0.25);
+  }
+}
+
+.gh-contrib-grid-disintegrating .gh-contrib-cell {
+  animation: ghContribDisintegrate 0.55s ease-in forwards;
+  animation-delay: calc(var(--stagger, 0) * 3.2s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-contrib-grid-disintegrating .gh-contrib-cell {
+    animation: none;
+  }
+}
+
+@keyframes ghContribSkeleton {
+  50% { opacity: 0.45; }
+}
+
+.gh-contrib-skeleton {
+  background-color: var(--card-border);
+  animation: ghContribSkeleton 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-contrib-skeleton {
+    animation: none;
+    opacity: 0.6;
+  }
+}
