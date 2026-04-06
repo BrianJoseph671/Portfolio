@@ -90,13 +90,22 @@ body {
 .theme-icon { color: var(--text-muted); }
 .theme-icon:hover { color: var(--accent); }
 
-/* GitHub-style contribution heatmap */
+/* GitHub-style contribution heatmap (fixed size fallback) */
 .gh-contrib-cell {
   width: 11px;
   height: 11px;
   min-width: 11px;
   min-height: 11px;
   display: block;
+}
+
+/* Fluid grid: fill footer width, square cells scale down */
+.gh-contrib-grid-fluid .gh-contrib-cell {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
 }
 
 .gh-contrib-l0 { background-color: var(--contrib-0); }
