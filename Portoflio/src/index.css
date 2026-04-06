@@ -90,6 +90,16 @@ body {
 .theme-icon { color: var(--text-muted); }
 .theme-icon:hover { color: var(--accent); }
 
+/* Contribution chart: horizontal scroll without visible scrollbar */
+.gh-contrib-scroll {
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.gh-contrib-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* GitHub-style contribution heatmap */
 .gh-contrib-cell {
   width: 11px;

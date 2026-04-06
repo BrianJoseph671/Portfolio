@@ -111,7 +111,7 @@ export function GitHubContributionGrid() {
   return (
     <div className="mb-8 w-full flex flex-col items-center gap-2">
       <div
-        className="w-full max-w-[min(100%,520px)] overflow-x-auto pb-1"
+        className="w-full max-w-[min(100%,520px)] gh-contrib-scroll pb-1"
         role="img"
         aria-label={
           totalLabel
