@@ -88,8 +88,8 @@ export function GitHubContributionGrid() {
 
   if (!data) {
     return (
-      <div className="mb-8 flex justify-center" aria-hidden>
-        <div className="h-[84px] w-full max-w-[min(100%,520px)] rounded-md gh-contrib-skeleton" />
+      <div className="mb-8 w-full" aria-hidden>
+        <div className="h-[88px] w-full rounded-md gh-contrib-skeleton" />
       </div>
     )
   }
@@ -111,7 +111,7 @@ export function GitHubContributionGrid() {
   return (
     <div className="mb-8 w-full flex flex-col items-center gap-2">
       <div
-        className="w-full max-w-[min(100%,520px)] gh-contrib-scroll pb-1"
+        className="w-full pb-1"
         role="img"
         aria-label={
           totalLabel
@@ -119,9 +119,9 @@ export function GitHubContributionGrid() {
             : 'GitHub contribution calendar for the last year.'
         }
       >
-        <div className={`gh-contrib-grid flex gap-[3px] min-w-min mx-auto ${disintegrateClass}`}>
+        <div className={`gh-contrib-grid gh-contrib-grid-fluid flex w-full gap-[3px] ${disintegrateClass}`}>
           {data.weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-[3px]">
+            <div key={wi} className="flex min-w-0 flex-1 flex-col gap-[3px]">
               {(week.days || []).map((day) => {
                 const level = day.level || 'NONE'
                 const cls = LEVEL_CLASS[level] || LEVEL_CLASS.NONE
