@@ -230,8 +230,8 @@ export function GitHubContributionGrid() {
       ? `Decorative contribution squares forming the name Brian. Based on ${totalLabel}.`
       : 'Decorative contribution squares forming the name Brian.'
     : totalLabel
-      ? `Animated GitHub contribution calendar: a rocket clears squares to reveal the name Brian. ${totalLabel}.`
-      : 'Animated GitHub contribution calendar: a rocket clears squares to reveal the name Brian.'
+      ? `Animated GitHub contribution calendar: a rocket moves left to right and carves squares to reveal the name Brian. ${totalLabel}.`
+      : 'Animated GitHub contribution calendar: a rocket moves left to right and carves squares to reveal the name Brian.'
 
   return (
     <div className="mb-8 w-full flex flex-col items-center gap-2">
