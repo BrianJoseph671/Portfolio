@@ -54,6 +54,8 @@ export function GitHubContributionGrid() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(false)
   const [runState, setRunState] = useState('idle')
+  const [clearedCells, setClearedCells] = useState(() => new Set())
+  const [ball, setBall] = useState(null)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -86,7 +88,19 @@ export function GitHubContributionGrid() {
   }, [])
 
   const numWeeks = data?.weeks?.length ?? 0
+  const numRows = 7
   const nameMask = useMemo(() => makeBrianMask(numWeeks), [numWeeks])
+  const clearTargets = useMemo(() => {
+    if (!data?.weeks?.length) return []
+    const targets = []
+    data.weeks.forEach((week, wi) => {
+      ;(week.days || []).forEach((_, di) => {
+        const key = `${wi},${di}`
+        if (!nameMask.has(key)) targets.push(key)
+      })
+    })
+    return targets
+  }, [data, nameMask])
 
   const totalLabel = useMemo(() => {
     if (!data?.weeks?.length) return null
@@ -100,7 +114,63 @@ export function GitHubContributionGrid() {
   useEffect(() => {
     if (!data?.weeks?.length || isReducedMotion) return
     if (runState !== 'running') return
-  }, [data, isReducedMotion, runState])
+
+    const timer = window.setInterval(() => {
+      setBall((prev) => {
+        if (!prev) return prev
+
+        let nextX = prev.x + prev.vx
+        let nextY = prev.y + prev.vy
+        let nextVx = prev.vx
+        let nextVy = prev.vy
+
+        if (nextX <= 0 || nextX >= numWeeks - 1) {
+          nextVx = -nextVx
+          nextX = Math.max(0, Math.min(numWeeks - 1, nextX))
+        }
+        if (nextY <= 0 || nextY >= numRows - 1) {
+          nextVy = -nextVy
+          nextY = Math.max(0, Math.min(numRows - 1, nextY))
+        }
+
+        const hitWi = Math.round(nextX)
+        const hitDi = Math.round(nextY)
+        const hitKey = `${hitWi},${hitDi}`
+        if (!nameMask.has(hitKey)) {
+          setClearedCells((current) => {
+            if (current.has(hitKey)) return current
+            const next = new Set(current)
+            next.add(hitKey)
+            return next
+          })
+        }
+
+        return { x: nextX, y: nextY, vx: nextVx, vy: nextVy }
+      })
+    }, BALL_STEP_MS)
+
+    return () => window.clearInterval(timer)
+  }, [data, isReducedMotion, nameMask, numRows, numWeeks, runState])
+
+  useEffect(() => {
+    if (runState !== 'running') return
+    if (clearedCells.size < clearTargets.length) return
+    setRunState('done')
+    setBall(null)
+  }, [clearTargets.length, clearedCells, runState])
+
+  const handleRelease = () => {
+    if (runState !== 'idle' || !data?.weeks?.length) return
+    setClearedCells(new Set())
+    setBall({ x: 0, y: 0, vx: BALL_SPEED_X, vy: BALL_SPEED_Y })
+    setRunState('running')
+  }
+
+  const handleReset = () => {
+    setRunState('idle')
+    setBall(null)
+    setClearedCells(new Set())
+  }
 
   if (loadError) {
     return null
@@ -143,10 +213,21 @@ export function GitHubContributionGrid() {
     <div className="mb-8 w-full flex flex-col items-center gap-2">
       <div className="w-full pb-1" role="img" aria-label={ariaLabel}>
         <div className={gridShellClass}>
+          {runState === 'running' && ball ? (
+            <span
+              className="gh-contrib-ball"
+              aria-hidden
+              style={{
+                '--ball-x': String(ball.x),
+                '--ball-y': String(ball.y),
+              }}
+            />
+          ) : null}
           <div
             className="gh-contrib-grid gh-contrib-grid-fluid flex w-full gap-[3px]"
             style={{
               '--contrib-cols': String(numWeeks),
+              '--contrib-rows': String(numRows),
             }}
           >
             {data.weeks.map((week, wi) => (
@@ -155,13 +236,14 @@ export function GitHubContributionGrid() {
                   const level = day.level || 'NONE'
                   const cls = LEVEL_CLASS[level] || LEVEL_CLASS.NONE
                   const inName = nameMask.has(`${wi},${di}`)
+                  const isCleared = clearedCells.has(`${wi},${di}`)
                   return (
                     <span
                       key={day.date}
                       className={[
                         'gh-contrib-cell rounded-[2px]',
                         cls,
-                        inName ? 'gh-contrib-name-keep' : '',
+                        !inName && isCleared ? 'gh-contrib-cell-cleared' : '',
                       ]
                         .filter(Boolean)
                         .join(' ')}
@@ -175,7 +257,25 @@ export function GitHubContributionGrid() {
         </div>
       </div>
       {totalLabel ? (
-        <p className="text-[11px] theme-text-muted text-center">{totalLabel}</p>
+        <div className="flex items-center justify-center gap-2 text-[11px] theme-text-muted text-center flex-wrap">
+          <span>{totalLabel}</span>
+          <button
+            type="button"
+            onClick={handleRelease}
+            disabled={runState !== 'idle'}
+            className="gh-contrib-control"
+          >
+            Release
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={runState === 'idle'}
+            className="gh-contrib-control"
+          >
+            Reset
+          </button>
+        </div>
       ) : null}
     </div>
   )
