@@ -9,8 +9,6 @@ const LEVEL_CLASS = {
 }
 
 const BALL_STEP_MS = 18
-const BALL_SPEED_X = 1
-const BALL_SPEED_Y = 1
 const REFRESH_MS = 5 * 60 * 1000
 
 /** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
@@ -57,6 +55,7 @@ export function GitHubContributionGrid() {
   const [runState, setRunState] = useState('idle')
   const [clearedCells, setClearedCells] = useState(() => new Set())
   const [ball, setBall] = useState(null)
+  const [routeIndex, setRouteIndex] = useState(0)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -114,6 +113,17 @@ export function GitHubContributionGrid() {
     })
     return targets
   }, [data, nameMask])
+  const pinballRoute = useMemo(() => {
+    const route = []
+    for (let di = 0; di < numRows; di++) {
+      if (di % 2 === 0) {
+        for (let wi = 0; wi < numWeeks; wi++) route.push({ wi, di })
+      } else {
+        for (let wi = numWeeks - 1; wi >= 0; wi--) route.push({ wi, di })
+      }
+    }
+    return route
+  }, [numRows, numWeeks])
 
   const totalLabel = useMemo(() => {
     if (!data?.weeks?.length) return null
@@ -135,26 +145,13 @@ export function GitHubContributionGrid() {
     if (runState !== 'running') return
 
     const timer = window.setInterval(() => {
-      setBall((prev) => {
-        if (!prev) return prev
+      setRouteIndex((currentIndex) => {
+        const nextIndex = currentIndex + 1
+        const point = pinballRoute[nextIndex]
+        if (!point) return currentIndex
 
-        let nextX = prev.x + prev.vx
-        let nextY = prev.y + prev.vy
-        let nextVx = prev.vx
-        let nextVy = prev.vy
-
-        if (nextX <= 0 || nextX >= numWeeks - 1) {
-          nextVx = -nextVx
-          nextX = Math.max(0, Math.min(numWeeks - 1, nextX))
-        }
-        if (nextY <= 0 || nextY >= numRows - 1) {
-          nextVy = -nextVy
-          nextY = Math.max(0, Math.min(numRows - 1, nextY))
-        }
-
-        const hitWi = Math.round(nextX)
-        const hitDi = Math.round(nextY)
-        const hitKey = `${hitWi},${hitDi}`
+        setBall({ x: point.wi, y: point.di })
+        const hitKey = `${point.wi},${point.di}`
         if (!nameMask.has(hitKey)) {
           setClearedCells((current) => {
             if (current.has(hitKey)) return current
@@ -163,13 +160,12 @@ export function GitHubContributionGrid() {
             return next
           })
         }
-
-        return { x: nextX, y: nextY, vx: nextVx, vy: nextVy }
+        return nextIndex
       })
     }, BALL_STEP_MS)
 
     return () => window.clearInterval(timer)
-  }, [data, isReducedMotion, nameMask, numRows, numWeeks, runState])
+  }, [data, isReducedMotion, nameMask, pinballRoute, runState])
 
   useEffect(() => {
     if (runState !== 'running') return
@@ -180,8 +176,14 @@ export function GitHubContributionGrid() {
 
   const handleRelease = () => {
     if (runState !== 'idle' || !data?.weeks?.length) return
+    if (isReducedMotion) {
+      setClearedCells(new Set(clearTargets))
+      setRunState('done')
+      return
+    }
     setClearedCells(new Set())
-    setBall({ x: 0, y: 0, vx: BALL_SPEED_X, vy: BALL_SPEED_Y })
+    setRouteIndex(0)
+    setBall({ x: 0, y: 0 })
     setRunState('running')
   }
 
