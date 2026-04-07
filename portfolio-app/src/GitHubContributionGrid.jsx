@@ -8,10 +8,15 @@ const LEVEL_CLASS = {
   FOURTH_QUARTILE: 'gh-contrib-l4',
 }
 
-const BALL_STEP_MS = 16
-const BALL_SPEED_MIN = 0.075
-const BALL_SPEED_MAX = 0.112
+const SNAKE_STEP_MS = 95
+const INITIAL_SNAKE_LENGTH = 4
 const REFRESH_MS = 5 * 60 * 1000
+const DIRECTIONS = [
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+]
 
 /** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
 const GLYPH_B = ['11110', '10001', '10001', '11110', '10001', '10001', '11110']
@@ -51,32 +56,14 @@ function makeBrianMask(numWeeks) {
   return mask
 }
 
-function clampSpeed(vx, vy) {
-  const mag = Math.hypot(vx, vy) || 1
-  if (mag < BALL_SPEED_MIN) {
-    const f = BALL_SPEED_MIN / mag
-    return { x: vx * f, y: vy * f }
-  }
-  if (mag > BALL_SPEED_MAX) {
-    const f = BALL_SPEED_MAX / mag
-    return { x: vx * f, y: vy * f }
-  }
-  return { x: vx, y: vy }
-}
-
-function rotate(vx, vy, radians) {
-  const c = Math.cos(radians)
-  const s = Math.sin(radians)
-  return { x: vx * c - vy * s, y: vx * s + vy * c }
-}
-
 export function GitHubContributionGrid() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(false)
   const [runState, setRunState] = useState('idle')
   const [clearedCells, setClearedCells] = useState(() => new Set())
-  const [ball, setBall] = useState(null)
-  const [velocity, setVelocity] = useState(null)
+  const [snake, setSnake] = useState([])
+  const [direction, setDirection] = useState({ x: 1, y: 0 })
+  const [growthLeft, setGrowthLeft] = useState(0)
   const [activeHit, setActiveHit] = useState('')
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
@@ -123,8 +110,7 @@ export function GitHubContributionGrid() {
 
   const numWeeks = data?.weeks?.length ?? 0
   const numRows = 7
-  const runStartedAtRef = useRef(0)
-  const recentCellsRef = useRef([])
+  const randRef = useRef(Math.random())
   const nameMask = useMemo(() => makeBrianMask(numWeeks), [numWeeks])
   const clearTargets = useMemo(() => {
     if (!data?.weeks?.length) return []
@@ -143,13 +129,6 @@ export function GitHubContributionGrid() {
     if (typeof total !== 'number') return null
     return `${total.toLocaleString()} contributions in the last year`
   }, [data])
-  const fetchedAtLabel = useMemo(() => {
-    if (!data?.fetchedAt) return null
-    const stamp = new Date(data.fetchedAt)
-    if (Number.isNaN(stamp.getTime())) return null
-    return `Updated ${stamp.toLocaleString()}`
-  }, [data])
-
   const isReducedMotion = prefersReducedMotion
 
   useEffect(() => {
