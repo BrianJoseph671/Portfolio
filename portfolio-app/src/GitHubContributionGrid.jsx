@@ -65,6 +65,12 @@ function clampSpeed(vx, vy) {
   return { x: vx, y: vy }
 }
 
+function rotate(vx, vy, radians) {
+  const c = Math.cos(radians)
+  const s = Math.sin(radians)
+  return { x: vx * c - vy * s, y: vx * s + vy * c }
+}
+
 export function GitHubContributionGrid() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(false)
@@ -159,13 +165,16 @@ export function GitHubContributionGrid() {
         let nextVx = velocity.x
         let nextVy = velocity.y
 
+        let bounced = false
         if (nextX <= 0 || nextX >= numWeeks - 1) {
           nextVx = -nextVx
           nextX = Math.max(0, Math.min(numWeeks - 1, nextX))
+          bounced = true
         }
         if (nextY <= 0 || nextY >= numRows - 1) {
           nextVy = -nextVy
           nextY = Math.max(0, Math.min(numRows - 1, nextY))
+          bounced = true
         }
 
         const hitWi = Math.round(nextX)
@@ -181,6 +190,20 @@ export function GitHubContributionGrid() {
             next.add(hitKey)
             return next
           })
+        }
+
+        if (bounced) {
+          const jitter = (Math.random() * 0.34) - 0.17
+          const rotated = rotate(nextVx, nextVy, jitter)
+          nextVx = rotated.x
+          nextVy = rotated.y
+        }
+
+        const repeatedCount = recentCellsRef.current.filter((k) => k === hitKey).length
+        if (repeatedCount >= 4) {
+          const rotated = rotate(nextVx, nextVy, 0.45 * (Math.random() > 0.5 ? 1 : -1))
+          nextVx = rotated.x
+          nextVy = rotated.y
         }
 
         const normalized = clampSpeed(nextVx, nextVy)
