@@ -136,62 +136,57 @@ export function GitHubContributionGrid() {
     if (runState !== 'running') return
 
     const timer = window.setInterval(() => {
-      setBall((currentBall) => {
-        if (!currentBall || !velocity) return currentBall
-        let nextX = currentBall.x + velocity.x
-        let nextY = currentBall.y + velocity.y
-        let nextVx = velocity.x
-        let nextVy = velocity.y
+      setSnake((currentSnake) => {
+        if (!currentSnake.length) return currentSnake
+        const head = currentSnake[0]
+        const opposite = { x: -direction.x, y: -direction.y }
+        const validDirs = DIRECTIONS.filter((d) => {
+          if (d.x === opposite.x && d.y === opposite.y) return false
+          const nx = head.x + d.x
+          const ny = head.y + d.y
+          return nx >= 0 && nx < numWeeks && ny >= 0 && ny < numRows
+        })
+        if (!validDirs.length) return currentSnake
 
-        let bounced = false
-        if (nextX <= 0 || nextX >= numWeeks - 1) {
-          nextVx = -nextVx
-          nextX = Math.max(0, Math.min(numWeeks - 1, nextX))
-          bounced = true
-        }
-        if (nextY <= 0 || nextY >= numRows - 1) {
-          nextVy = -nextVy
-          nextY = Math.max(0, Math.min(numRows - 1, nextY))
-          bounced = true
-        }
+        const scored = validDirs.map((d) => {
+          const nx = head.x + d.x
+          const ny = head.y + d.y
+          const k = `${nx},${ny}`
+          let score = d.x === direction.x && d.y === direction.y ? 2 : 0
+          if (!nameMask.has(k) && !clearedCells.has(k)) score += 3
+          if (currentSnake.some((s, idx) => idx < currentSnake.length - 1 && s.x === nx && s.y === ny)) score -= 2
+          return { d, score }
+        })
+        scored.sort((a, b) => b.score - a.score)
+        const top = scored.filter((s) => s.score === scored[0].score)
+        const pick = top[Math.floor((Math.random() + randRef.current) * 1000) % top.length].d
+        setDirection(pick)
 
-        const hitWi = Math.round(nextX)
-        const hitDi = Math.round(nextY)
-        const hitKey = `${hitWi},${hitDi}`
-        recentCellsRef.current.push(hitKey)
-        if (recentCellsRef.current.length > 28) recentCellsRef.current.shift()
+        const nextHead = { x: head.x + pick.x, y: head.y + pick.y }
+        const hitKey = `${nextHead.x},${nextHead.y}`
         if (!nameMask.has(hitKey)) {
           setActiveHit(hitKey)
           setClearedCells((current) => {
             if (current.has(hitKey)) return current
             const next = new Set(current)
             next.add(hitKey)
+            setGrowthLeft((g) => g + 1)
             return next
           })
         }
 
-        if (bounced) {
-          const jitter = (Math.random() * 0.34) - 0.17
-          const rotated = rotate(nextVx, nextVy, jitter)
-          nextVx = rotated.x
-          nextVy = rotated.y
+        const grownSnake = [nextHead, ...currentSnake]
+        if (growthLeft > 0) {
+          setGrowthLeft((g) => Math.max(0, g - 1))
+          return grownSnake
         }
-
-        const repeatedCount = recentCellsRef.current.filter((k) => k === hitKey).length
-        if (repeatedCount >= 4) {
-          const rotated = rotate(nextVx, nextVy, 0.45 * (Math.random() > 0.5 ? 1 : -1))
-          nextVx = rotated.x
-          nextVy = rotated.y
-        }
-
-        const normalized = clampSpeed(nextVx, nextVy)
-        setVelocity(normalized)
-        return { x: nextX, y: nextY }
+        grownSnake.pop()
+        return grownSnake
       })
-    }, BALL_STEP_MS)
+    }, SNAKE_STEP_MS)
 
     return () => window.clearInterval(timer)
-  }, [data, isReducedMotion, numRows, numWeeks, runState, velocity])
+  }, [clearedCells, data, direction, growthLeft, isReducedMotion, nameMask, numRows, numWeeks, runState])
 
   useEffect(() => {
     if (!activeHit) return
@@ -203,8 +198,7 @@ export function GitHubContributionGrid() {
     if (runState !== 'running') return
     if (clearedCells.size < clearTargets.length) return
     setRunState('done')
-    setBall(null)
-    setVelocity(null)
+    setDirection({ x: 1, y: 0 })
   }, [clearTargets.length, clearedCells, runState])
 
   const handleRelease = () => {
@@ -215,17 +209,20 @@ export function GitHubContributionGrid() {
       return
     }
     setClearedCells(new Set())
-    runStartedAtRef.current = performance.now()
-    recentCellsRef.current = []
-    setBall({ x: Math.max(1, numWeeks * 0.2), y: Math.max(1, numRows * 0.35) })
-    setVelocity({ x: 0.11, y: 0.08 })
+    const startX = Math.max(INITIAL_SNAKE_LENGTH - 1, Math.floor(numWeeks * 0.2))
+    const startY = Math.max(1, Math.floor(numRows * 0.4))
+    const body = Array.from({ length: INITIAL_SNAKE_LENGTH }, (_, i) => ({ x: startX - i, y: startY }))
+    setSnake(body)
+    setDirection({ x: 1, y: 0 })
+    setGrowthLeft(0)
     setRunState('running')
   }
 
   const handleReset = () => {
     setRunState('idle')
-    setBall(null)
-    setVelocity(null)
+    setSnake([])
+    setDirection({ x: 1, y: 0 })
+    setGrowthLeft(0)
     setActiveHit('')
     setClearedCells(new Set())
   }
@@ -263,24 +260,26 @@ export function GitHubContributionGrid() {
       ? `Decorative contribution squares forming the name Brian. Based on ${totalLabel}.`
       : 'Decorative contribution squares forming the name Brian.'
     : totalLabel
-      ? `Animated GitHub contribution calendar: release a pinball to clear squares and reveal the name Brian. ${totalLabel}.`
-      : 'Animated GitHub contribution calendar: release a pinball to clear squares and reveal the name Brian.'
+      ? `Animated GitHub contribution calendar: release a snake to eat non-Brian squares and reveal the name Brian. ${totalLabel}.`
+      : 'Animated GitHub contribution calendar: release a snake to eat non-Brian squares and reveal the name Brian.'
 
   return (
     <div className="mb-8 w-full flex flex-col items-center gap-2">
       <div className="w-full pb-1" role="img" aria-label={ariaLabel}>
         <div className={gridShellClass}>
-          {runState === 'running' && ball ? (
-            <span
-              className="gh-contrib-ball"
-              aria-hidden
-              style={{
-                left: `${(ball.x / Math.max(numWeeks - 1, 1)) * 100}%`,
-                top: `${(ball.y / Math.max(numRows - 1, 1)) * 100}%`,
-                '--trail-x': `${Math.max(0, -velocity?.x || 0) * 18}px`,
-                '--trail-y': `${(-velocity?.y || 0) * 10}px`,
-              }}
-            />
+          {snake.length ? (
+            <div className="gh-contrib-snake-layer" aria-hidden>
+              {snake.map((seg, idx) => (
+                <span
+                  key={`${seg.x},${seg.y},${idx}`}
+                  className={idx === 0 ? 'gh-contrib-snake-head' : 'gh-contrib-snake-body'}
+                  style={{
+                    left: `${(seg.x / Math.max(numWeeks - 1, 1)) * 100}%`,
+                    top: `${(seg.y / Math.max(numRows - 1, 1)) * 100}%`,
+                  }}
+                />
+              ))}
+            </div>
           ) : null}
           <div
             className="gh-contrib-grid gh-contrib-grid-fluid flex w-full gap-[3px]"
@@ -319,7 +318,6 @@ export function GitHubContributionGrid() {
       {totalLabel ? (
         <div className="flex items-center justify-center gap-2 text-[11px] theme-text-muted text-center flex-wrap">
           <span>{totalLabel}</span>
-          {fetchedAtLabel ? <span className="opacity-80">{fetchedAtLabel}</span> : null}
           <button
             type="button"
             onClick={handleRelease}
