@@ -11,7 +11,6 @@ const LEVEL_CLASS = {
 const BALL_STEP_MS = 16
 const BALL_SPEED_MIN = 0.075
 const BALL_SPEED_MAX = 0.112
-const RUN_TIMEOUT_MS = 60_000
 const REFRESH_MS = 5 * 60 * 1000
 
 /** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
@@ -228,16 +227,6 @@ export function GitHubContributionGrid() {
     setBall(null)
     setVelocity(null)
   }, [clearTargets.length, clearedCells, runState])
-
-  useEffect(() => {
-    if (runState !== 'running') return
-    if (!runStartedAtRef.current) return
-    const elapsed = performance.now() - runStartedAtRef.current
-    if (elapsed < RUN_TIMEOUT_MS) return
-    setRunState('done')
-    setBall(null)
-    setVelocity(null)
-  }, [runState, ball])
 
   const handleRelease = () => {
     if (runState !== 'idle' || !data?.weeks?.length) return
