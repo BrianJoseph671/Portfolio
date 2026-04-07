@@ -114,88 +114,71 @@ body {
 .gh-contrib-l3 { background-color: var(--contrib-3); }
 .gh-contrib-l4 { background-color: var(--contrib-4); }
 
-/* Rocket + selective blast (name cells stay) */
+/* Pinball reveal animation */
 .gh-contrib-grid-shell {
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+  border-radius: 8px;
+  padding: 10px 8px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
-.gh-contrib-rocket {
+.gh-contrib-snake-layer {
   position: absolute;
-  top: 50%;
+  top: 10px;
+  right: 8px;
+  bottom: 10px;
+  left: 8px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.gh-contrib-snake-head,
+.gh-contrib-snake-body {
+  position: absolute;
+  top: 0;
   left: 0;
-  z-index: 2;
-  width: clamp(22px, 7vw, 32px);
-  height: clamp(22px, 7vw, 32px);
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
   pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: left 16ms linear, top 16ms linear;
+}
+
+.gh-contrib-snake-head {
+  background: #111827;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.24);
+}
+
+.gh-contrib-snake-body {
+  background: rgba(30, 41, 59, 0.75);
+}
+
+.gh-contrib-cell-cleared {
   opacity: 0;
-  transform: translate3d(-12px, -50%, 0);
+  transition: opacity 120ms linear;
 }
 
-.gh-contrib-rocket-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+.gh-contrib-cell-hit {
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.38), 0 0 8px rgba(15, 23, 42, 0.2);
 }
 
-.gh-contrib-rocket-sweeping .gh-contrib-rocket {
-  opacity: 1;
-  animation: ghContribRocketSweep var(--sweep-ms, 3200ms) linear forwards;
+.gh-contrib-control {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #334155;
+  background: #fff;
+  transition: all 0.16s ease;
 }
 
-@keyframes ghContribRocketSweep {
-  from {
-    transform: translate3d(-12px, -50%, 0);
-  }
-  to {
-    transform: translate3d(calc(100% - clamp(22px, 7vw, 32px) + 8px), -50%, 0);
-  }
-}
-
-.gh-contrib-name-keep {
-  position: relative;
-  z-index: 1;
-}
-
-@keyframes ghContribBlast {
-  0% {
-    opacity: 1;
-    filter: brightness(1);
-    box-shadow: 0 0 0 0 transparent;
-  }
-  35% {
-    filter: brightness(1.25);
-    box-shadow: -2px 0 6px 0 color-mix(in srgb, var(--accent) 55%, transparent);
-  }
-  to {
-    opacity: 0;
-    filter: brightness(0.85);
-    transform: translate3d(-22px, var(--blast-y, 0px), 0) rotate(-28deg) scale(0.22);
-    box-shadow: -6px 0 10px 0 color-mix(in srgb, var(--accent) 35%, transparent);
-  }
-}
-
-.gh-contrib-grid-sweeping .gh-contrib-blast {
-  animation: ghContribBlast 0.6s ease-in forwards;
-  animation-delay: var(--blast-delay-ms, 0ms);
-}
-
-.gh-contrib-reduced-static .gh-contrib-cell:not(.gh-contrib-name-keep) {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gh-contrib-rocket-sweeping .gh-contrib-rocket {
-    animation: none;
-    opacity: 0;
-  }
-
-  .gh-contrib-grid-sweeping .gh-contrib-blast {
-    animation: none;
-  }
+.gh-contrib-control:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 @keyframes ghContribSkeleton {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 
 const LEVEL_CLASS = {
   NONE: 'gh-contrib-l0',
@@ -8,10 +8,15 @@ const LEVEL_CLASS = {
   FOURTH_QUARTILE: 'gh-contrib-l4',
 }
 
-const SOLID_MS = 7000
-const SWEEP_MS = 3200
-const BLAST_ANIM_MS = 600
-const PAUSE_MS = 800
+const SNAKE_STEP_MS = 95
+const INITIAL_SNAKE_LENGTH = 4
+const REFRESH_MS = 5 * 60 * 1000
+const DIRECTIONS = [
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+]
 
 /** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
 const GLYPH_B = ['11110', '10001', '10001', '11110', '10001', '10001', '11110']
@@ -51,45 +56,16 @@ function makeBrianMask(numWeeks) {
   return mask
 }
 
-function staggerForIndex(i) {
-  return ((i * 7919) % 1000) / 1000
-}
-
-function RocketIcon({ className }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <path
-        d="M28 8c6 2 10 8 10 15v4l-4 6h-6l-2-8-2 8h-6l-4-6v-4c0-7 4-13 10-15l2 6 2-6Z"
-        fill="var(--accent)"
-        opacity="0.95"
-      />
-      <path d="M22 26h4v10h-4z" fill="var(--text-muted)" opacity="0.85" />
-      <path
-        d="M16 36c2-4 4-6 8-6s6 2 8 6"
-        stroke="var(--accent)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        opacity="0.7"
-      />
-      <path
-        d="M8 28c3-1 6 0 8 2-2 3-5 5-9 5 0-2 1-5 1-7Z"
-        fill="var(--accent)"
-        opacity="0.55"
-      />
-    </svg>
-  )
-}
-
 export function GitHubContributionGrid() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(false)
-  const [sweeping, setSweeping] = useState(false)
+  const [runState, setRunState] = useState('idle')
+  const [clearedCells, setClearedCells] = useState(() => new Set())
+  const [snake, setSnake] = useState([])
+  const [direction, setDirection] = useState({ x: 1, y: 0 })
+  const [growthLeft, setGrowthLeft] = useState(0)
+  const [eatenCount, setEatenCount] = useState(0)
+  const [activeHit, setActiveHit] = useState('')
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -105,64 +81,167 @@ export function GitHubContributionGrid() {
 
   useEffect(() => {
     let cancelled = false
-    fetch('/contributions.json')
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status))
-        return r.json()
-      })
-      .then((json) => {
-        if (!cancelled) setData(json)
-      })
-      .catch(() => {
-        if (!cancelled) setLoadError(true)
-      })
+
+    const loadContributions = () => {
+      const minuteBucket = Math.floor(Date.now() / REFRESH_MS)
+      fetch(`/contributions.json?v=${minuteBucket}`, { cache: 'no-store' })
+        .then((r) => {
+          if (!r.ok) throw new Error(String(r.status))
+          return r.json()
+        })
+        .then((json) => {
+          if (!cancelled) {
+            setData(json)
+            setLoadError(false)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setLoadError(true)
+        })
+    }
+
+    loadContributions()
+    const poll = window.setInterval(loadContributions, REFRESH_MS)
+
     return () => {
       cancelled = true
+      window.clearInterval(poll)
     }
   }, [])
 
   const numWeeks = data?.weeks?.length ?? 0
+  const numRows = 7
+  const randRef = useRef(Math.random())
   const nameMask = useMemo(() => makeBrianMask(numWeeks), [numWeeks])
-
+  const clearTargets = useMemo(() => {
+    if (!data?.weeks?.length) return []
+    const targets = []
+    data.weeks.forEach((week, wi) => {
+      ;(week.days || []).forEach((_, di) => {
+        const key = `${wi},${di}`
+        if (!nameMask.has(key)) targets.push(key)
+      })
+    })
+    return targets
+  }, [data, nameMask])
   const totalLabel = useMemo(() => {
     if (!data?.weeks?.length) return null
     const total = data.totalContributions
     if (typeof total !== 'number') return null
     return `${total.toLocaleString()} contributions in the last year`
   }, [data])
-
   const isReducedMotion = prefersReducedMotion
 
   useEffect(() => {
     if (!data?.weeks?.length || isReducedMotion) return
+    if (runState !== 'running') return
 
-    const timers = []
-    let cancelled = false
+    const timer = window.setInterval(() => {
+      setSnake((currentSnake) => {
+        if (!currentSnake.length) return currentSnake
+        const head = currentSnake[0]
+        const validDirs = DIRECTIONS.filter((d) => {
+          const nx = head.x + d.x
+          const ny = head.y + d.y
+          if (!(nx >= 0 && nx < numWeeks && ny >= 0 && ny < numRows)) return false
+          const nextKey = `${nx},${ny}`
+          if (nameMask.has(nextKey)) return false
+          const hitsBody = currentSnake.some((s) => s.x === nx && s.y === ny)
+          if (hitsBody) return false
+          return true
+        })
+        if (!validDirs.length) return currentSnake
 
-    const after = (ms, fn) => {
-      const id = window.setTimeout(() => {
-        if (!cancelled) fn()
-      }, ms)
-      timers.push(id)
+        const scored = validDirs.map((d) => {
+          const nx = head.x + d.x
+          const ny = head.y + d.y
+          const k = `${nx},${ny}`
+          let score = d.x === direction.x && d.y === direction.y ? 2 : 0
+          if (!clearedCells.has(k)) score += 3
+          return { d, score }
+        })
+        scored.sort((a, b) => b.score - a.score)
+        const top = scored.filter((s) => s.score === scored[0].score)
+        const pick = top[Math.floor((Math.random() + randRef.current) * 1000) % top.length].d
+        setDirection(pick)
+
+        const nextHead = { x: head.x + pick.x, y: head.y + pick.y }
+
+        const grownSnake = [nextHead, ...currentSnake]
+        if (growthLeft > 0) {
+          setGrowthLeft((g) => Math.max(0, g - 1))
+          return grownSnake
+        }
+        grownSnake.pop()
+        return grownSnake
+      })
+    }, SNAKE_STEP_MS)
+
+    return () => window.clearInterval(timer)
+  }, [clearedCells, data, direction, growthLeft, isReducedMotion, nameMask, numRows, numWeeks, runState])
+
+  useEffect(() => {
+    if (!activeHit) return
+    const id = window.setTimeout(() => setActiveHit(''), 120)
+    return () => window.clearTimeout(id)
+  }, [activeHit])
+
+  // Authoritative "eat" behavior: whenever the snake head overlaps a non-Brian
+  // cell, mark it cleared and grow once.
+  useEffect(() => {
+    if (runState !== 'running') return
+    if (!snake.length) return
+    const head = snake[0]
+    const headKey = `${head.x},${head.y}`
+    if (nameMask.has(headKey)) return
+    setClearedCells((current) => {
+      if (current.has(headKey)) return current
+      const next = new Set(current)
+      next.add(headKey)
+      setEatenCount((count) => {
+        const updated = count + 1
+        if (updated % 5 === 0) setGrowthLeft((g) => g + 1)
+        return updated
+      })
+      setActiveHit(headKey)
+      return next
+    })
+  }, [nameMask, runState, snake])
+
+  useEffect(() => {
+    if (runState !== 'running') return
+    if (clearedCells.size < clearTargets.length) return
+    setRunState('done')
+    setDirection({ x: 1, y: 0 })
+  }, [clearTargets.length, clearedCells, runState])
+
+  const handleRelease = () => {
+    if (runState !== 'idle' || !data?.weeks?.length) return
+    if (isReducedMotion) {
+      setClearedCells(new Set(clearTargets))
+      setRunState('done')
+      return
     }
+    setClearedCells(new Set())
+    const startX = Math.max(INITIAL_SNAKE_LENGTH - 1, Math.floor(numWeeks * 0.2))
+    const startY = Math.max(1, Math.floor(numRows * 0.4))
+    const body = Array.from({ length: INITIAL_SNAKE_LENGTH }, (_, i) => ({ x: startX - i, y: startY }))
+    setSnake(body)
+    setDirection({ x: 1, y: 0 })
+    setGrowthLeft(0)
+    setEatenCount(0)
+    setRunState('running')
+  }
 
-    const sweepTotal = SWEEP_MS + BLAST_ANIM_MS
-
-    const loop = () => {
-      if (cancelled) return
-      setSweeping(false)
-      after(SOLID_MS, () => setSweeping(true))
-      after(SOLID_MS + sweepTotal, () => setSweeping(false))
-      after(SOLID_MS + sweepTotal + PAUSE_MS, loop)
-    }
-
-    loop()
-
-    return () => {
-      cancelled = true
-      timers.forEach((id) => clearTimeout(id))
-    }
-  }, [data, isReducedMotion])
+  const handleReset = () => {
+    setRunState('idle')
+    setSnake([])
+    setDirection({ x: 1, y: 0 })
+    setGrowthLeft(0)
+    setEatenCount(0)
+    setActiveHit('')
+    setClearedCells(new Set())
+  }
 
   if (loadError) {
     return null
@@ -185,15 +264,9 @@ export function GitHubContributionGrid() {
     )
   }
 
-  const maxWeekIndex = Math.max(numWeeks - 1, 1)
-  const norm = (wi) => wi / maxWeekIndex
-
-  let cellIndex = 0
-
   const gridShellClass = [
     'gh-contrib-grid-shell',
-    isReducedMotion ? 'gh-contrib-reduced-static' : '',
-    sweeping ? 'gh-contrib-rocket-sweeping' : '',
+    runState === 'running' ? 'gh-contrib-pinball-running' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -203,23 +276,32 @@ export function GitHubContributionGrid() {
       ? `Decorative contribution squares forming the name Brian. Based on ${totalLabel}.`
       : 'Decorative contribution squares forming the name Brian.'
     : totalLabel
-      ? `Animated GitHub contribution calendar: a rocket clears squares to reveal the name Brian. ${totalLabel}.`
-      : 'Animated GitHub contribution calendar: a rocket clears squares to reveal the name Brian.'
+      ? `Animated GitHub contribution calendar: release a snake to eat non-Brian squares and reveal the name Brian. ${totalLabel}.`
+      : 'Animated GitHub contribution calendar: release a snake to eat non-Brian squares and reveal the name Brian.'
 
   return (
     <div className="mb-8 w-full flex flex-col items-center gap-2">
       <div className="w-full pb-1" role="img" aria-label={ariaLabel}>
         <div className={gridShellClass}>
-          {!isReducedMotion ? (
-            <div className="gh-contrib-rocket" aria-hidden>
-              <RocketIcon className="gh-contrib-rocket-svg" />
+          {snake.length ? (
+            <div className="gh-contrib-snake-layer" aria-hidden>
+              {snake.map((seg, idx) => (
+                <span
+                  key={`${seg.x},${seg.y},${idx}`}
+                  className={idx === 0 ? 'gh-contrib-snake-head' : 'gh-contrib-snake-body'}
+                  style={{
+                    left: `${((seg.x + 0.5) / Math.max(numWeeks, 1)) * 100}%`,
+                    top: `${((seg.y + 0.5) / Math.max(numRows, 1)) * 100}%`,
+                  }}
+                />
+              ))}
             </div>
           ) : null}
           <div
-            className={`gh-contrib-grid gh-contrib-grid-fluid flex w-full gap-[3px] ${sweeping && !isReducedMotion ? 'gh-contrib-grid-sweeping' : ''}`}
+            className="gh-contrib-grid gh-contrib-grid-fluid flex w-full gap-[3px]"
             style={{
               '--contrib-cols': String(numWeeks),
-              '--sweep-ms': `${SWEEP_MS}ms`,
+              '--contrib-rows': String(numRows),
             }}
           >
             {data.weeks.map((week, wi) => (
@@ -227,28 +309,19 @@ export function GitHubContributionGrid() {
                 {(week.days || []).map((day, di) => {
                   const level = day.level || 'NONE'
                   const cls = LEVEL_CLASS[level] || LEVEL_CLASS.NONE
-                  const stagger = staggerForIndex(cellIndex++)
                   const inName = nameMask.has(`${wi},${di}`)
-                  const blast = sweeping && !isReducedMotion && !inName
-                  const blastDelayMs = norm(wi) * SWEEP_MS * 0.92
-                  const blastY = stagger * 14 - 7
+                  const isCleared = clearedCells.has(`${wi},${di}`)
                   return (
                     <span
                       key={day.date}
                       className={[
                         'gh-contrib-cell rounded-[2px]',
                         cls,
-                        inName ? 'gh-contrib-name-keep' : '',
-                        blast ? 'gh-contrib-blast' : '',
+                        activeHit === `${wi},${di}` ? 'gh-contrib-cell-hit' : '',
+                        !inName && isCleared ? 'gh-contrib-cell-cleared' : '',
                       ]
                         .filter(Boolean)
                         .join(' ')}
-                      style={{
-                        '--stagger': String(stagger),
-                        '--col': String(wi),
-                        '--blast-delay-ms': `${blastDelayMs}ms`,
-                        '--blast-y': `${blastY}px`,
-                      }}
                       title={`${day.date}: ${day.count ?? 0} contribution${(day.count ?? 0) === 1 ? '' : 's'}`}
                     />
                   )
@@ -259,7 +332,25 @@ export function GitHubContributionGrid() {
         </div>
       </div>
       {totalLabel ? (
-        <p className="text-[11px] theme-text-muted text-center">{totalLabel}</p>
+        <div className="flex items-center justify-center gap-2 text-[11px] theme-text-muted text-center flex-wrap">
+          <span>{totalLabel}</span>
+          <button
+            type="button"
+            onClick={handleRelease}
+            disabled={runState !== 'idle'}
+            className="gh-contrib-control"
+          >
+            Release
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={runState === 'idle'}
+            className="gh-contrib-control"
+          >
+            Reset
+          </button>
+        </div>
       ) : null}
     </div>
   )
