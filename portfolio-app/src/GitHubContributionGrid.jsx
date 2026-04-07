@@ -9,8 +9,8 @@ const LEVEL_CLASS = {
 }
 
 const BALL_STEP_MS = 16
-const BALL_SPEED_MIN = 0.085
-const BALL_SPEED_MAX = 0.14
+const BALL_SPEED_MIN = 0.075
+const BALL_SPEED_MAX = 0.112
 const RUN_TIMEOUT_MS = 60_000
 const REFRESH_MS = 5 * 60 * 1000
 
@@ -226,7 +226,18 @@ export function GitHubContributionGrid() {
     if (clearedCells.size < clearTargets.length) return
     setRunState('done')
     setBall(null)
+    setVelocity(null)
   }, [clearTargets.length, clearedCells, runState])
+
+  useEffect(() => {
+    if (runState !== 'running') return
+    if (!runStartedAtRef.current) return
+    const elapsed = performance.now() - runStartedAtRef.current
+    if (elapsed < RUN_TIMEOUT_MS) return
+    setRunState('done')
+    setBall(null)
+    setVelocity(null)
+  }, [runState, ball])
 
   const handleRelease = () => {
     if (runState !== 'idle' || !data?.weeks?.length) return
@@ -239,7 +250,7 @@ export function GitHubContributionGrid() {
     runStartedAtRef.current = performance.now()
     recentCellsRef.current = []
     setBall({ x: Math.max(1, numWeeks * 0.2), y: Math.max(1, numRows * 0.35) })
-    setVelocity({ x: BALL_SPEED_MAX, y: BALL_SPEED_MIN })
+    setVelocity({ x: 0.11, y: 0.08 })
     setRunState('running')
   }
 
