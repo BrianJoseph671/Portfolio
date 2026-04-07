@@ -64,6 +64,7 @@ export function GitHubContributionGrid() {
   const [snake, setSnake] = useState([])
   const [direction, setDirection] = useState({ x: 1, y: 0 })
   const [growthLeft, setGrowthLeft] = useState(0)
+  const [eatenCount, setEatenCount] = useState(0)
   const [activeHit, setActiveHit] = useState('')
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
@@ -139,12 +140,15 @@ export function GitHubContributionGrid() {
       setSnake((currentSnake) => {
         if (!currentSnake.length) return currentSnake
         const head = currentSnake[0]
-        const opposite = { x: -direction.x, y: -direction.y }
         const validDirs = DIRECTIONS.filter((d) => {
-          if (d.x === opposite.x && d.y === opposite.y) return false
           const nx = head.x + d.x
           const ny = head.y + d.y
-          return nx >= 0 && nx < numWeeks && ny >= 0 && ny < numRows
+          if (!(nx >= 0 && nx < numWeeks && ny >= 0 && ny < numRows)) return false
+          const nextKey = `${nx},${ny}`
+          if (nameMask.has(nextKey)) return false
+          const hitsBody = currentSnake.some((s) => s.x === nx && s.y === ny)
+          if (hitsBody) return false
+          return true
         })
         if (!validDirs.length) return currentSnake
 
@@ -153,8 +157,7 @@ export function GitHubContributionGrid() {
           const ny = head.y + d.y
           const k = `${nx},${ny}`
           let score = d.x === direction.x && d.y === direction.y ? 2 : 0
-          if (!nameMask.has(k) && !clearedCells.has(k)) score += 3
-          if (currentSnake.some((s, idx) => idx < currentSnake.length - 1 && s.x === nx && s.y === ny)) score -= 2
+          if (!clearedCells.has(k)) score += 3
           return { d, score }
         })
         scored.sort((a, b) => b.score - a.score)
@@ -163,17 +166,6 @@ export function GitHubContributionGrid() {
         setDirection(pick)
 
         const nextHead = { x: head.x + pick.x, y: head.y + pick.y }
-        const hitKey = `${nextHead.x},${nextHead.y}`
-        if (!nameMask.has(hitKey)) {
-          setActiveHit(hitKey)
-          setClearedCells((current) => {
-            if (current.has(hitKey)) return current
-            const next = new Set(current)
-            next.add(hitKey)
-            setGrowthLeft((g) => g + 1)
-            return next
-          })
-        }
 
         const grownSnake = [nextHead, ...currentSnake]
         if (growthLeft > 0) {
@@ -193,6 +185,28 @@ export function GitHubContributionGrid() {
     const id = window.setTimeout(() => setActiveHit(''), 120)
     return () => window.clearTimeout(id)
   }, [activeHit])
+
+  // Authoritative "eat" behavior: whenever the snake head overlaps a non-Brian
+  // cell, mark it cleared and grow once.
+  useEffect(() => {
+    if (runState !== 'running') return
+    if (!snake.length) return
+    const head = snake[0]
+    const headKey = `${head.x},${head.y}`
+    if (nameMask.has(headKey)) return
+    setClearedCells((current) => {
+      if (current.has(headKey)) return current
+      const next = new Set(current)
+      next.add(headKey)
+      setEatenCount((count) => {
+        const updated = count + 1
+        if (updated % 5 === 0) setGrowthLeft((g) => g + 1)
+        return updated
+      })
+      setActiveHit(headKey)
+      return next
+    })
+  }, [nameMask, runState, snake])
 
   useEffect(() => {
     if (runState !== 'running') return
@@ -215,6 +229,7 @@ export function GitHubContributionGrid() {
     setSnake(body)
     setDirection({ x: 1, y: 0 })
     setGrowthLeft(0)
+    setEatenCount(0)
     setRunState('running')
   }
 
@@ -223,6 +238,7 @@ export function GitHubContributionGrid() {
     setSnake([])
     setDirection({ x: 1, y: 0 })
     setGrowthLeft(0)
+    setEatenCount(0)
     setActiveHit('')
     setClearedCells(new Set())
   }
@@ -274,8 +290,8 @@ export function GitHubContributionGrid() {
                   key={`${seg.x},${seg.y},${idx}`}
                   className={idx === 0 ? 'gh-contrib-snake-head' : 'gh-contrib-snake-body'}
                   style={{
-                    left: `${(seg.x / Math.max(numWeeks - 1, 1)) * 100}%`,
-                    top: `${(seg.y / Math.max(numRows - 1, 1)) * 100}%`,
+                    left: `${((seg.x + 0.5) / Math.max(numWeeks, 1)) * 100}%`,
+                    top: `${((seg.y + 0.5) / Math.max(numRows, 1)) * 100}%`,
                   }}
                 />
               ))}
