@@ -8,10 +8,11 @@ const LEVEL_CLASS = {
   FOURTH_QUARTILE: 'gh-contrib-l4',
 }
 
-const SOLID_MS = 7000
-const SWEEP_MS = 3200
-const BLAST_ANIM_MS = 600
-const PAUSE_MS = 800
+const SOLID_MS = 2200
+const SWEEP_MS = 3600
+const BLAST_ANIM_MS = 520
+const HOLD_MS = 1800
+const PAUSE_MS = 650
 
 /** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
 const GLYPH_B = ['11110', '10001', '10001', '11110', '10001', '10001', '11110']
@@ -90,6 +91,7 @@ export function GitHubContributionGrid() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(false)
   const [sweeping, setSweeping] = useState(false)
+  const [sweepProgress, setSweepProgress] = useState(0)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -136,31 +138,56 @@ export function GitHubContributionGrid() {
   useEffect(() => {
     if (!data?.weeks?.length || isReducedMotion) return
 
-    const timers = []
     let cancelled = false
+    let rafId = 0
+    let solidTimer = 0
+    let holdTimer = 0
+    let pauseTimer = 0
+    let sweepStartTs = 0
 
-    const after = (ms, fn) => {
-      const id = window.setTimeout(() => {
-        if (!cancelled) fn()
-      }, ms)
-      timers.push(id)
+    const runSweep = () => {
+      if (cancelled) return
+      setSweeping(true)
+      setSweepProgress(0)
+      sweepStartTs = performance.now()
+
+      const tick = (ts) => {
+        if (cancelled) return
+        const elapsed = ts - sweepStartTs
+        const progress = Math.min(1, elapsed / SWEEP_MS)
+        setSweepProgress(progress)
+
+        if (progress < 1) {
+          rafId = window.requestAnimationFrame(tick)
+          return
+        }
+
+        holdTimer = window.setTimeout(() => {
+          if (cancelled) return
+          setSweeping(false)
+          setSweepProgress(0)
+          pauseTimer = window.setTimeout(startCycle, PAUSE_MS)
+        }, Math.max(0, HOLD_MS - BLAST_ANIM_MS))
+      }
+
+      rafId = window.requestAnimationFrame(tick)
     }
 
-    const sweepTotal = SWEEP_MS + BLAST_ANIM_MS
-
-    const loop = () => {
+    const startCycle = () => {
       if (cancelled) return
       setSweeping(false)
-      after(SOLID_MS, () => setSweeping(true))
-      after(SOLID_MS + sweepTotal, () => setSweeping(false))
-      after(SOLID_MS + sweepTotal + PAUSE_MS, loop)
+      setSweepProgress(0)
+      solidTimer = window.setTimeout(runSweep, SOLID_MS)
     }
 
-    loop()
+    startCycle()
 
     return () => {
       cancelled = true
-      timers.forEach((id) => clearTimeout(id))
+      window.cancelAnimationFrame(rafId)
+      window.clearTimeout(solidTimer)
+      window.clearTimeout(holdTimer)
+      window.clearTimeout(pauseTimer)
     }
   }, [data, isReducedMotion])
 
@@ -220,6 +247,7 @@ export function GitHubContributionGrid() {
             style={{
               '--contrib-cols': String(numWeeks),
               '--sweep-ms': `${SWEEP_MS}ms`,
+              '--sweep-progress': String(sweepProgress),
             }}
           >
             {data.weeks.map((week, wi) => (
@@ -229,6 +257,8 @@ export function GitHubContributionGrid() {
                   const cls = LEVEL_CLASS[level] || LEVEL_CLASS.NONE
                   const stagger = staggerForIndex(cellIndex++)
                   const inName = nameMask.has(`${wi},${di}`)
+                  const hasPassedCell = sweepProgress >= norm(wi)
+                  const carvedAway = sweeping && !isReducedMotion && !inName && hasPassedCell
                   const blast = sweeping && !isReducedMotion && !inName
                   const blastDelayMs = norm(wi) * SWEEP_MS * 0.92
                   const blastY = stagger * 14 - 7
@@ -239,6 +269,7 @@ export function GitHubContributionGrid() {
                         'gh-contrib-cell rounded-[2px]',
                         cls,
                         inName ? 'gh-contrib-name-keep' : '',
+                        carvedAway ? 'gh-contrib-cell-cleared' : '',
                         blast ? 'gh-contrib-blast' : '',
                       ]
                         .filter(Boolean)
