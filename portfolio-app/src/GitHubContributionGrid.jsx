@@ -309,6 +309,8 @@ export function GitHubContributionGrid() {
               style={{
                 left: `${(ball.x / Math.max(numWeeks - 1, 1)) * 100}%`,
                 top: `${(ball.y / Math.max(numRows - 1, 1)) * 100}%`,
+                '--trail-x': `${Math.max(0, -velocity?.x || 0) * 18}px`,
+                '--trail-y': `${(-velocity?.y || 0) * 10}px`,
               }}
             />
           ) : null}

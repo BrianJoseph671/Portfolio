@@ -136,11 +136,27 @@ body {
   box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.22);
   pointer-events: none;
   transform: translate(-50%, -50%);
+  transition: left 16ms linear, top 16ms linear;
+}
+
+.gh-contrib-ball::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  transform: translate(var(--trail-x, -8px), var(--trail-y, 0));
+  background: radial-gradient(circle, rgba(17, 24, 39, 0.35) 0%, rgba(17, 24, 39, 0) 75%);
+  filter: blur(0.8px);
+  pointer-events: none;
 }
 
 .gh-contrib-cell-cleared {
   opacity: 0;
   transition: opacity 120ms linear;
+}
+
+.gh-contrib-cell-hit {
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.45), 0 0 8px rgba(37, 99, 235, 0.28);
 }
 
 .gh-contrib-control {
