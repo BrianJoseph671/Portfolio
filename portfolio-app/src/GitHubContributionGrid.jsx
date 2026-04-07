@@ -8,11 +8,9 @@ const LEVEL_CLASS = {
   FOURTH_QUARTILE: 'gh-contrib-l4',
 }
 
-const SOLID_MS = 2200
-const SWEEP_MS = 3600
-const BLAST_ANIM_MS = 520
-const HOLD_MS = 1800
-const PAUSE_MS = 650
+const BALL_STEP_MS = 18
+const BALL_SPEED_X = 1
+const BALL_SPEED_Y = 1
 
 /** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
 const GLYPH_B = ['11110', '10001', '10001', '11110', '10001', '10001', '11110']
@@ -52,46 +50,10 @@ function makeBrianMask(numWeeks) {
   return mask
 }
 
-function staggerForIndex(i) {
-  return ((i * 7919) % 1000) / 1000
-}
-
-function RocketIcon({ className }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <path
-        d="M28 8c6 2 10 8 10 15v4l-4 6h-6l-2-8-2 8h-6l-4-6v-4c0-7 4-13 10-15l2 6 2-6Z"
-        fill="var(--accent)"
-        opacity="0.95"
-      />
-      <path d="M22 26h4v10h-4z" fill="var(--text-muted)" opacity="0.85" />
-      <path
-        d="M16 36c2-4 4-6 8-6s6 2 8 6"
-        stroke="var(--accent)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        opacity="0.7"
-      />
-      <path
-        d="M8 28c3-1 6 0 8 2-2 3-5 5-9 5 0-2 1-5 1-7Z"
-        fill="var(--accent)"
-        opacity="0.55"
-      />
-    </svg>
-  )
-}
-
 export function GitHubContributionGrid() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(false)
-  const [sweeping, setSweeping] = useState(false)
-  const [sweepProgress, setSweepProgress] = useState(0)
+  const [runState, setRunState] = useState('idle')
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -137,59 +99,8 @@ export function GitHubContributionGrid() {
 
   useEffect(() => {
     if (!data?.weeks?.length || isReducedMotion) return
-
-    let cancelled = false
-    let rafId = 0
-    let solidTimer = 0
-    let holdTimer = 0
-    let pauseTimer = 0
-    let sweepStartTs = 0
-
-    const runSweep = () => {
-      if (cancelled) return
-      setSweeping(true)
-      setSweepProgress(0)
-      sweepStartTs = performance.now()
-
-      const tick = (ts) => {
-        if (cancelled) return
-        const elapsed = ts - sweepStartTs
-        const progress = Math.min(1, elapsed / SWEEP_MS)
-        setSweepProgress(progress)
-
-        if (progress < 1) {
-          rafId = window.requestAnimationFrame(tick)
-          return
-        }
-
-        holdTimer = window.setTimeout(() => {
-          if (cancelled) return
-          setSweeping(false)
-          setSweepProgress(0)
-          pauseTimer = window.setTimeout(startCycle, PAUSE_MS)
-        }, Math.max(0, HOLD_MS - BLAST_ANIM_MS))
-      }
-
-      rafId = window.requestAnimationFrame(tick)
-    }
-
-    const startCycle = () => {
-      if (cancelled) return
-      setSweeping(false)
-      setSweepProgress(0)
-      solidTimer = window.setTimeout(runSweep, SOLID_MS)
-    }
-
-    startCycle()
-
-    return () => {
-      cancelled = true
-      window.cancelAnimationFrame(rafId)
-      window.clearTimeout(solidTimer)
-      window.clearTimeout(holdTimer)
-      window.clearTimeout(pauseTimer)
-    }
-  }, [data, isReducedMotion])
+    if (runState !== 'running') return
+  }, [data, isReducedMotion, runState])
 
   if (loadError) {
     return null
@@ -212,15 +123,10 @@ export function GitHubContributionGrid() {
     )
   }
 
-  const maxWeekIndex = Math.max(numWeeks - 1, 1)
-  const norm = (wi) => wi / maxWeekIndex
-
-  let cellIndex = 0
-
   const gridShellClass = [
     'gh-contrib-grid-shell',
     isReducedMotion ? 'gh-contrib-reduced-static' : '',
-    sweeping ? 'gh-contrib-rocket-sweeping' : '',
+    runState === 'running' ? 'gh-contrib-pinball-running' : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -230,24 +136,17 @@ export function GitHubContributionGrid() {
       ? `Decorative contribution squares forming the name Brian. Based on ${totalLabel}.`
       : 'Decorative contribution squares forming the name Brian.'
     : totalLabel
-      ? `Animated GitHub contribution calendar: a rocket moves left to right and carves squares to reveal the name Brian. ${totalLabel}.`
-      : 'Animated GitHub contribution calendar: a rocket moves left to right and carves squares to reveal the name Brian.'
+      ? `Animated GitHub contribution calendar: release a pinball to clear squares and reveal the name Brian. ${totalLabel}.`
+      : 'Animated GitHub contribution calendar: release a pinball to clear squares and reveal the name Brian.'
 
   return (
     <div className="mb-8 w-full flex flex-col items-center gap-2">
       <div className="w-full pb-1" role="img" aria-label={ariaLabel}>
         <div className={gridShellClass}>
-          {!isReducedMotion ? (
-            <div className="gh-contrib-rocket" aria-hidden>
-              <RocketIcon className="gh-contrib-rocket-svg" />
-            </div>
-          ) : null}
           <div
-            className={`gh-contrib-grid gh-contrib-grid-fluid flex w-full gap-[3px] ${sweeping && !isReducedMotion ? 'gh-contrib-grid-sweeping' : ''}`}
+            className="gh-contrib-grid gh-contrib-grid-fluid flex w-full gap-[3px]"
             style={{
               '--contrib-cols': String(numWeeks),
-              '--sweep-ms': `${SWEEP_MS}ms`,
-              '--sweep-progress': String(sweepProgress),
             }}
           >
             {data.weeks.map((week, wi) => (
@@ -255,13 +154,7 @@ export function GitHubContributionGrid() {
                 {(week.days || []).map((day, di) => {
                   const level = day.level || 'NONE'
                   const cls = LEVEL_CLASS[level] || LEVEL_CLASS.NONE
-                  const stagger = staggerForIndex(cellIndex++)
                   const inName = nameMask.has(`${wi},${di}`)
-                  const hasPassedCell = sweepProgress >= norm(wi)
-                  const carvedAway = sweeping && !isReducedMotion && !inName && hasPassedCell
-                  const blast = sweeping && !isReducedMotion && !inName
-                  const blastDelayMs = norm(wi) * SWEEP_MS * 0.92
-                  const blastY = stagger * 14 - 7
                   return (
                     <span
                       key={day.date}
@@ -269,17 +162,9 @@ export function GitHubContributionGrid() {
                         'gh-contrib-cell rounded-[2px]',
                         cls,
                         inName ? 'gh-contrib-name-keep' : '',
-                        carvedAway ? 'gh-contrib-cell-cleared' : '',
-                        blast ? 'gh-contrib-blast' : '',
                       ]
                         .filter(Boolean)
                         .join(' ')}
-                      style={{
-                        '--stagger': String(stagger),
-                        '--col': String(wi),
-                        '--blast-delay-ms': `${blastDelayMs}ms`,
-                        '--blast-y': `${blastY}px`,
-                      }}
                       title={`${day.date}: ${day.count ?? 0} contribution${(day.count ?? 0) === 1 ? '' : 's'}`}
                     />
                   )
