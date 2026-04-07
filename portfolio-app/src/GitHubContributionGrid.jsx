@@ -52,6 +52,19 @@ function makeBrianMask(numWeeks) {
   return mask
 }
 
+function clampSpeed(vx, vy) {
+  const mag = Math.hypot(vx, vy) || 1
+  if (mag < BALL_SPEED_MIN) {
+    const f = BALL_SPEED_MIN / mag
+    return { x: vx * f, y: vy * f }
+  }
+  if (mag > BALL_SPEED_MAX) {
+    const f = BALL_SPEED_MAX / mag
+    return { x: vx * f, y: vy * f }
+  }
+  return { x: vx, y: vy }
+}
+
 export function GitHubContributionGrid() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(false)
@@ -139,27 +152,30 @@ export function GitHubContributionGrid() {
     if (runState !== 'running') return
 
     const timer = window.setInterval(() => {
-      setRouteIndex((currentIndex) => {
-        const nextIndex = currentIndex + 1
-        const point = pinballRoute[nextIndex]
-        if (!point) return currentIndex
+      setBall((currentBall) => {
+        if (!currentBall || !velocity) return currentBall
+        let nextX = currentBall.x + velocity.x
+        let nextY = currentBall.y + velocity.y
+        let nextVx = velocity.x
+        let nextVy = velocity.y
 
-        setBall({ x: point.wi, y: point.di })
-        const hitKey = `${point.wi},${point.di}`
-        if (!nameMask.has(hitKey)) {
-          setClearedCells((current) => {
-            if (current.has(hitKey)) return current
-            const next = new Set(current)
-            next.add(hitKey)
-            return next
-          })
+        if (nextX <= 0 || nextX >= numWeeks - 1) {
+          nextVx = -nextVx
+          nextX = Math.max(0, Math.min(numWeeks - 1, nextX))
         }
-        return nextIndex
+        if (nextY <= 0 || nextY >= numRows - 1) {
+          nextVy = -nextVy
+          nextY = Math.max(0, Math.min(numRows - 1, nextY))
+        }
+
+        const normalized = clampSpeed(nextVx, nextVy)
+        setVelocity(normalized)
+        return { x: nextX, y: nextY }
       })
     }, BALL_STEP_MS)
 
     return () => window.clearInterval(timer)
-  }, [data, isReducedMotion, nameMask, pinballRoute, runState])
+  }, [data, isReducedMotion, numRows, numWeeks, runState, velocity])
 
   useEffect(() => {
     if (runState !== 'running') return
