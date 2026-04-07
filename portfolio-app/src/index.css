@@ -126,7 +126,10 @@ body {
 
 .gh-contrib-snake-layer {
   position: absolute;
-  inset: 0;
+  top: 10px;
+  right: 8px;
+  bottom: 10px;
+  left: 8px;
   pointer-events: none;
   z-index: 3;
 }
@@ -134,8 +137,8 @@ body {
 .gh-contrib-snake-head,
 .gh-contrib-snake-body {
   position: absolute;
-  top: 10px;
-  left: 8px;
+  top: 0;
+  left: 0;
   width: 9px;
   height: 9px;
   border-radius: 2px;
