@@ -114,20 +114,86 @@ body {
 .gh-contrib-l3 { background-color: var(--contrib-3); }
 .gh-contrib-l4 { background-color: var(--contrib-4); }
 
-@keyframes ghContribDisintegrate {
+/* Rocket + selective blast (name cells stay) */
+.gh-contrib-grid-shell {
+  position: relative;
+  overflow: visible;
+}
+
+.gh-contrib-rocket {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 2;
+  width: clamp(22px, 7vw, 32px);
+  height: clamp(22px, 7vw, 32px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(-12px, -50%, 0);
+}
+
+.gh-contrib-rocket-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+.gh-contrib-rocket-sweeping .gh-contrib-rocket {
+  opacity: 1;
+  animation: ghContribRocketSweep var(--sweep-ms, 3200ms) linear forwards;
+}
+
+@keyframes ghContribRocketSweep {
+  from {
+    transform: translate3d(-12px, -50%, 0);
+  }
   to {
-    opacity: 0;
-    transform: translateY(14px) rotate(18deg) scale(0.25);
+    transform: translate3d(calc(100% - clamp(22px, 7vw, 32px) + 8px), -50%, 0);
   }
 }
 
-.gh-contrib-grid-disintegrating .gh-contrib-cell {
-  animation: ghContribDisintegrate 0.55s ease-in forwards;
-  animation-delay: calc(var(--stagger, 0) * 3.2s);
+.gh-contrib-name-keep {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes ghContribBlast {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  35% {
+    filter: brightness(1.25);
+    box-shadow: -2px 0 6px 0 color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  to {
+    opacity: 0;
+    filter: brightness(0.85);
+    transform: translate3d(-22px, var(--blast-y, 0px), 0) rotate(-28deg) scale(0.22);
+    box-shadow: -6px 0 10px 0 color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+}
+
+.gh-contrib-grid-sweeping .gh-contrib-blast {
+  animation: ghContribBlast 0.6s ease-in forwards;
+  animation-delay: var(--blast-delay-ms, 0ms);
+}
+
+.gh-contrib-reduced-static .gh-contrib-cell:not(.gh-contrib-name-keep) {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gh-contrib-grid-disintegrating .gh-contrib-cell {
+  .gh-contrib-rocket-sweeping .gh-contrib-rocket {
+    animation: none;
+    opacity: 0;
+  }
+
+  .gh-contrib-grid-sweeping .gh-contrib-blast {
     animation: none;
   }
 }
