@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 
 const LEVEL_CLASS = {
   NONE: 'gh-contrib-l0',
@@ -8,7 +8,10 @@ const LEVEL_CLASS = {
   FOURTH_QUARTILE: 'gh-contrib-l4',
 }
 
-const BALL_STEP_MS = 18
+const BALL_STEP_MS = 16
+const BALL_SPEED_MIN = 0.085
+const BALL_SPEED_MAX = 0.14
+const RUN_TIMEOUT_MS = 60_000
 const REFRESH_MS = 5 * 60 * 1000
 
 /** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
@@ -55,7 +58,8 @@ export function GitHubContributionGrid() {
   const [runState, setRunState] = useState('idle')
   const [clearedCells, setClearedCells] = useState(() => new Set())
   const [ball, setBall] = useState(null)
-  const [routeIndex, setRouteIndex] = useState(0)
+  const [velocity, setVelocity] = useState(null)
+  const [activeHit, setActiveHit] = useState('')
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -101,6 +105,8 @@ export function GitHubContributionGrid() {
 
   const numWeeks = data?.weeks?.length ?? 0
   const numRows = 7
+  const runStartedAtRef = useRef(0)
+  const recentCellsRef = useRef([])
   const nameMask = useMemo(() => makeBrianMask(numWeeks), [numWeeks])
   const clearTargets = useMemo(() => {
     if (!data?.weeks?.length) return []
@@ -113,18 +119,6 @@ export function GitHubContributionGrid() {
     })
     return targets
   }, [data, nameMask])
-  const pinballRoute = useMemo(() => {
-    const route = []
-    for (let di = 0; di < numRows; di++) {
-      if (di % 2 === 0) {
-        for (let wi = 0; wi < numWeeks; wi++) route.push({ wi, di })
-      } else {
-        for (let wi = numWeeks - 1; wi >= 0; wi--) route.push({ wi, di })
-      }
-    }
-    return route
-  }, [numRows, numWeeks])
-
   const totalLabel = useMemo(() => {
     if (!data?.weeks?.length) return null
     const total = data.totalContributions
@@ -181,17 +175,19 @@ export function GitHubContributionGrid() {
       setRunState('done')
       return
     }
-    const initialCleared = new Set()
-    if (!nameMask.has('0,0')) initialCleared.add('0,0')
-    setClearedCells(initialCleared)
-    setRouteIndex(0)
-    setBall({ x: 0, y: 0 })
+    setClearedCells(new Set())
+    runStartedAtRef.current = performance.now()
+    recentCellsRef.current = []
+    setBall({ x: Math.max(1, numWeeks * 0.2), y: Math.max(1, numRows * 0.35) })
+    setVelocity({ x: BALL_SPEED_MAX, y: BALL_SPEED_MIN })
     setRunState('running')
   }
 
   const handleReset = () => {
     setRunState('idle')
     setBall(null)
+    setVelocity(null)
+    setActiveHit('')
     setClearedCells(new Set())
   }
 
