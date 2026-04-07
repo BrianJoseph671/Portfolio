@@ -218,7 +218,6 @@ export function GitHubContributionGrid() {
 
   const gridShellClass = [
     'gh-contrib-grid-shell',
-    isReducedMotion ? 'gh-contrib-reduced-static' : '',
     runState === 'running' ? 'gh-contrib-pinball-running' : '',
   ]
     .filter(Boolean)
