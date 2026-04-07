@@ -11,6 +11,7 @@ const LEVEL_CLASS = {
 const BALL_STEP_MS = 18
 const BALL_SPEED_X = 1
 const BALL_SPEED_Y = 1
+const REFRESH_MS = 5 * 60 * 1000
 
 /** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
 const GLYPH_B = ['11110', '10001', '10001', '11110', '10001', '10001', '11110']
@@ -71,19 +72,31 @@ export function GitHubContributionGrid() {
 
   useEffect(() => {
     let cancelled = false
-    fetch('/contributions.json')
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status))
-        return r.json()
-      })
-      .then((json) => {
-        if (!cancelled) setData(json)
-      })
-      .catch(() => {
-        if (!cancelled) setLoadError(true)
-      })
+
+    const loadContributions = () => {
+      const minuteBucket = Math.floor(Date.now() / REFRESH_MS)
+      fetch(`/contributions.json?v=${minuteBucket}`, { cache: 'no-store' })
+        .then((r) => {
+          if (!r.ok) throw new Error(String(r.status))
+          return r.json()
+        })
+        .then((json) => {
+          if (!cancelled) {
+            setData(json)
+            setLoadError(false)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setLoadError(true)
+        })
+    }
+
+    loadContributions()
+    const poll = window.setInterval(loadContributions, REFRESH_MS)
+
     return () => {
       cancelled = true
+      window.clearInterval(poll)
     }
   }, [])
 
@@ -107,6 +120,12 @@ export function GitHubContributionGrid() {
     const total = data.totalContributions
     if (typeof total !== 'number') return null
     return `${total.toLocaleString()} contributions in the last year`
+  }, [data])
+  const fetchedAtLabel = useMemo(() => {
+    if (!data?.fetchedAt) return null
+    const stamp = new Date(data.fetchedAt)
+    if (Number.isNaN(stamp.getTime())) return null
+    return `Updated ${stamp.toLocaleString()}`
   }, [data])
 
   const isReducedMotion = prefersReducedMotion
@@ -259,6 +278,7 @@ export function GitHubContributionGrid() {
       {totalLabel ? (
         <div className="flex items-center justify-center gap-2 text-[11px] theme-text-muted text-center flex-wrap">
           <span>{totalLabel}</span>
+          {fetchedAtLabel ? <span className="opacity-80">{fetchedAtLabel}</span> : null}
           <button
             type="button"
             onClick={handleRelease}
