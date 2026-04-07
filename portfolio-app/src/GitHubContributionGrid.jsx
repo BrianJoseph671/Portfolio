@@ -168,6 +168,21 @@ export function GitHubContributionGrid() {
           nextY = Math.max(0, Math.min(numRows - 1, nextY))
         }
 
+        const hitWi = Math.round(nextX)
+        const hitDi = Math.round(nextY)
+        const hitKey = `${hitWi},${hitDi}`
+        recentCellsRef.current.push(hitKey)
+        if (recentCellsRef.current.length > 28) recentCellsRef.current.shift()
+        if (!nameMask.has(hitKey)) {
+          setActiveHit(hitKey)
+          setClearedCells((current) => {
+            if (current.has(hitKey)) return current
+            const next = new Set(current)
+            next.add(hitKey)
+            return next
+          })
+        }
+
         const normalized = clampSpeed(nextVx, nextVy)
         setVelocity(normalized)
         return { x: nextX, y: nextY }
@@ -176,6 +191,12 @@ export function GitHubContributionGrid() {
 
     return () => window.clearInterval(timer)
   }, [data, isReducedMotion, numRows, numWeeks, runState, velocity])
+
+  useEffect(() => {
+    if (!activeHit) return
+    const id = window.setTimeout(() => setActiveHit(''), 120)
+    return () => window.clearTimeout(id)
+  }, [activeHit])
 
   useEffect(() => {
     if (runState !== 'running') return
@@ -277,6 +298,7 @@ export function GitHubContributionGrid() {
                       className={[
                         'gh-contrib-cell rounded-[2px]',
                         cls,
+                        activeHit === `${wi},${di}` ? 'gh-contrib-cell-hit' : '',
                         !inName && isCleared ? 'gh-contrib-cell-cleared' : '',
                       ]
                         .filter(Boolean)
