@@ -126,8 +126,8 @@ body {
 
 .gh-contrib-ball {
   position: absolute;
-  top: calc(10px + (100% - 20px) * (var(--ball-y) / 7));
-  left: calc(8px + (100% - 16px) * (var(--ball-x) / var(--contrib-cols)));
+  top: 10px;
+  left: 8px;
   z-index: 2;
   width: 8px;
   height: 8px;

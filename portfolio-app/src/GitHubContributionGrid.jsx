@@ -181,7 +181,9 @@ export function GitHubContributionGrid() {
       setRunState('done')
       return
     }
-    setClearedCells(new Set())
+    const initialCleared = new Set()
+    if (!nameMask.has('0,0')) initialCleared.add('0,0')
+    setClearedCells(initialCleared)
     setRouteIndex(0)
     setBall({ x: 0, y: 0 })
     setRunState('running')
@@ -239,8 +241,8 @@ export function GitHubContributionGrid() {
               className="gh-contrib-ball"
               aria-hidden
               style={{
-                '--ball-x': String(ball.x),
-                '--ball-y': String(ball.y),
+                left: `${(ball.x / Math.max(numWeeks - 1, 1)) * 100}%`,
+                top: `${(ball.y / Math.max(numRows - 1, 1)) * 100}%`,
               }}
             />
           ) : null}
