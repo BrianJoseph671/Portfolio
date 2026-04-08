@@ -18,14 +18,28 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+
+      - name: Check contributions token
+        id: token_check
+        env:
+          CONTRIBUTIONS_PAT: ${{ secrets.GITHUB_CONTRIBUTIONS_PAT || secrets.PORTFOLIO_ANIMATION }}
+        run: |
+          if [ -z "$CONTRIBUTIONS_PAT" ]; then
+            echo "Token missing (expected GITHUB_CONTRIBUTIONS_PAT or PORTFOLIO_ANIMATION). Skipping contributions refresh."
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Fetch contribution calendar
+        if: steps.token_check.outputs.has_token == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_CONTRIBUTIONS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_CONTRIBUTIONS_PAT || secrets.PORTFOLIO_ANIMATION }}
         run: node portfolio-app/scripts/fetch-contributions.mjs
 
       - name: Commit and push if changed
+        if: steps.token_check.outputs.has_token == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
