@@ -367,7 +367,7 @@ export function GitHubContributionGrid() {
             disabled={runState !== 'idle'}
             className="gh-contrib-control"
           >
-            Release
+            release agent snake
           </button>
           <button
             type="button"
