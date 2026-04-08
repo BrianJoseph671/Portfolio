@@ -8,8 +8,8 @@ const LEVEL_CLASS = {
   FOURTH_QUARTILE: 'gh-contrib-l4',
 }
 
-const SNAKE_STEP_MS = 95
-const INITIAL_SNAKE_LENGTH = 4
+const SNAKE_STEP_MS = 160
+const INITIAL_SNAKE_LENGTH = 1
 const REFRESH_MS = 5 * 60 * 1000
 const DIRECTIONS = [
   { x: 1, y: 0 },
@@ -17,43 +17,28 @@ const DIRECTIONS = [
   { x: 0, y: 1 },
   { x: 0, y: -1 },
 ]
-
-/** Minimal 5×7 glyphs; I is 3 cols. Rows top → bottom = day index 0 → 6 in each week column. */
-const GLYPH_B = ['11110', '10001', '10001', '11110', '10001', '10001', '11110']
-const GLYPH_R = ['11110', '10001', '10001', '11110', '10100', '10010', '10001']
-const GLYPH_I = ['111', '010', '010', '010', '010', '010', '111']
-const GLYPH_A = ['01110', '10001', '10001', '11111', '10001', '10001', '10001']
-const GLYPH_N = ['10001', '11001', '10101', '10101', '10011', '10001', '10001']
-
-function buildBrianPatternRows() {
-  const glyphs = [GLYPH_B, GLYPH_R, GLYPH_I, GLYPH_A, GLYPH_N]
-  const rows = []
-  for (let i = 0; i < 7; i++) {
-    rows.push(glyphs.map((g) => g[i]).join('0'))
-  }
-  return rows
+const KEY_TO_DIRECTION = {
+  ArrowRight: { x: 1, y: 0 },
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowDown: { x: 0, y: 1 },
+  ArrowUp: { x: 0, y: -1 },
+  KeyD: { x: 1, y: 0 },
+  KeyA: { x: -1, y: 0 },
+  KeyS: { x: 0, y: 1 },
+  KeyW: { x: 0, y: -1 },
 }
+function findSnakeStart(numWeeks, numRows, length) {
+  const startY = Math.max(1, Math.floor(numRows * 0.4))
+  const rowOrder = [startY, startY - 1, startY + 1, 1, 2, 3, 4, 5]
+    .filter((y, idx, arr) => y >= 0 && y < numRows && arr.indexOf(y) === idx)
 
-const BRIAN_PATTERN_ROWS = buildBrianPatternRows()
-const PATTERN_WIDTH = BRIAN_PATTERN_ROWS[0]?.length ?? 0
-
-/**
- * @param {number} numWeeks
- * @returns {Set<string>} keys "weekIndex,dayIndex"
- */
-function makeBrianMask(numWeeks) {
-  const mask = new Set()
-  if (!PATTERN_WIDTH || numWeeks < 1) return mask
-  const offsetX = Math.max(0, Math.floor((numWeeks - PATTERN_WIDTH) / 2))
-  for (let di = 0; di < 7; di++) {
-    const row = BRIAN_PATTERN_ROWS[di] || ''
-    for (let ci = 0; ci < row.length; ci++) {
-      if (row[ci] !== '1') continue
-      const wi = offsetX + ci
-      if (wi >= 0 && wi < numWeeks) mask.add(`${wi},${di}`)
+  for (const y of rowOrder) {
+    for (let x = Math.max(length - 1, 1); x < numWeeks - 1; x++) {
+      return Array.from({ length }, (_, i) => ({ x: x - i, y }))
     }
   }
-  return mask
+
+  return Array.from({ length }, (_, i) => ({ x: Math.max(length - 1, 1) - i, y: startY }))
 }
 
 export function GitHubContributionGrid() {
@@ -64,7 +49,7 @@ export function GitHubContributionGrid() {
   const [snake, setSnake] = useState([])
   const [direction, setDirection] = useState({ x: 1, y: 0 })
   const [growthLeft, setGrowthLeft] = useState(0)
-  const [eatenCount, setEatenCount] = useState(0)
+  const [grayEatenCount, setGrayEatenCount] = useState(0)
   const [activeHit, setActiveHit] = useState('')
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
     typeof window !== 'undefined' &&
@@ -111,19 +96,18 @@ export function GitHubContributionGrid() {
 
   const numWeeks = data?.weeks?.length ?? 0
   const numRows = 7
-  const randRef = useRef(Math.random())
-  const nameMask = useMemo(() => makeBrianMask(numWeeks), [numWeeks])
+  const pendingDirectionRef = useRef(null)
+  const directionRef = useRef({ x: 1, y: 0 })
   const clearTargets = useMemo(() => {
     if (!data?.weeks?.length) return []
     const targets = []
     data.weeks.forEach((week, wi) => {
       ;(week.days || []).forEach((_, di) => {
-        const key = `${wi},${di}`
-        if (!nameMask.has(key)) targets.push(key)
+        targets.push(`${wi},${di}`)
       })
     })
     return targets
-  }, [data, nameMask])
+  }, [data])
   const totalLabel = useMemo(() => {
     if (!data?.weeks?.length) return null
     const total = data.totalContributions
@@ -133,6 +117,10 @@ export function GitHubContributionGrid() {
   const isReducedMotion = prefersReducedMotion
 
   useEffect(() => {
+    directionRef.current = direction
+  }, [direction])
+
+  useEffect(() => {
     if (!data?.weeks?.length || isReducedMotion) return
     if (runState !== 'running') return
 
@@ -140,32 +128,25 @@ export function GitHubContributionGrid() {
       setSnake((currentSnake) => {
         if (!currentSnake.length) return currentSnake
         const head = currentSnake[0]
-        const validDirs = DIRECTIONS.filter((d) => {
-          const nx = head.x + d.x
-          const ny = head.y + d.y
-          if (!(nx >= 0 && nx < numWeeks && ny >= 0 && ny < numRows)) return false
-          const nextKey = `${nx},${ny}`
-          if (nameMask.has(nextKey)) return false
-          const hitsBody = currentSnake.some((s) => s.x === nx && s.y === ny)
-          if (hitsBody) return false
-          return true
-        })
-        if (!validDirs.length) return currentSnake
+        const requested = pendingDirectionRef.current
+        const currentDirection = directionRef.current
+        const canTurn =
+          requested &&
+          !(requested.x === -currentDirection.x && requested.y === -currentDirection.y)
+        const nextDirection = canTurn ? requested : currentDirection
+        pendingDirectionRef.current = null
+        directionRef.current = nextDirection
+        setDirection(nextDirection)
 
-        const scored = validDirs.map((d) => {
-          const nx = head.x + d.x
-          const ny = head.y + d.y
-          const k = `${nx},${ny}`
-          let score = d.x === direction.x && d.y === direction.y ? 2 : 0
-          if (!clearedCells.has(k)) score += 3
-          return { d, score }
-        })
-        scored.sort((a, b) => b.score - a.score)
-        const top = scored.filter((s) => s.score === scored[0].score)
-        const pick = top[Math.floor((Math.random() + randRef.current) * 1000) % top.length].d
-        setDirection(pick)
-
-        const nextHead = { x: head.x + pick.x, y: head.y + pick.y }
+        const nextHead = { x: head.x + nextDirection.x, y: head.y + nextDirection.y }
+        const nextHeadKey = `${nextHead.x},${nextHead.y}`
+        const hitsWall = !(nextHead.x >= 0 && nextHead.x < numWeeks && nextHead.y >= 0 && nextHead.y < numRows)
+        const hitsBody = currentSnake.some((s) => s.x === nextHead.x && s.y === nextHead.y)
+        if (hitsWall || hitsBody) {
+          setRunState('done')
+          pendingDirectionRef.current = null
+          return currentSnake
+        }
 
         const grownSnake = [nextHead, ...currentSnake]
         if (growthLeft > 0) {
@@ -178,7 +159,22 @@ export function GitHubContributionGrid() {
     }, SNAKE_STEP_MS)
 
     return () => window.clearInterval(timer)
-  }, [clearedCells, data, direction, growthLeft, isReducedMotion, nameMask, numRows, numWeeks, runState])
+  }, [data, growthLeft, isReducedMotion, numRows, numWeeks, runState])
+
+  useEffect(() => {
+    if (runState !== 'running' || isReducedMotion) return
+    const onKeyDown = (event) => {
+      const mapped = KEY_TO_DIRECTION[event.code] || KEY_TO_DIRECTION[event.key]
+      if (!mapped) return
+      event.preventDefault()
+      const baseDirection = pendingDirectionRef.current ?? directionRef.current
+      const reversing = mapped.x === -baseDirection.x && mapped.y === -baseDirection.y
+      if (reversing) return
+      pendingDirectionRef.current = mapped
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isReducedMotion, runState])
 
   useEffect(() => {
     if (!activeHit) return
@@ -186,33 +182,37 @@ export function GitHubContributionGrid() {
     return () => window.clearTimeout(id)
   }, [activeHit])
 
-  // Authoritative "eat" behavior: whenever the snake head overlaps a non-Brian
-  // cell, mark it cleared and grow once.
+  // Authoritative eat behavior: whenever the snake head enters a new cell,
+  // mark it cleared and grow by +1 every 10 gray (NONE) cells eaten.
   useEffect(() => {
     if (runState !== 'running') return
     if (!snake.length) return
     const head = snake[0]
     const headKey = `${head.x},${head.y}`
-    if (nameMask.has(headKey)) return
     setClearedCells((current) => {
       if (current.has(headKey)) return current
       const next = new Set(current)
       next.add(headKey)
-      setEatenCount((count) => {
-        const updated = count + 1
-        if (updated % 5 === 0) setGrowthLeft((g) => g + 1)
-        return updated
-      })
+      const level = data?.weeks?.[head.x]?.days?.[head.y]?.level
+      if (level === 'NONE') {
+        setGrayEatenCount((count) => {
+          const updated = count + 1
+          if (updated % 10 === 0) {
+            setGrowthLeft((g) => g + 1)
+          }
+          return updated
+        })
+      }
       setActiveHit(headKey)
       return next
     })
-  }, [nameMask, runState, snake])
+  }, [data, runState, snake])
 
   useEffect(() => {
     if (runState !== 'running') return
     if (clearedCells.size < clearTargets.length) return
     setRunState('done')
-    setDirection({ x: 1, y: 0 })
+    pendingDirectionRef.current = null
   }, [clearTargets.length, clearedCells, runState])
 
   const handleRelease = () => {
@@ -223,24 +223,26 @@ export function GitHubContributionGrid() {
       return
     }
     setClearedCells(new Set())
-    const startX = Math.max(INITIAL_SNAKE_LENGTH - 1, Math.floor(numWeeks * 0.2))
-    const startY = Math.max(1, Math.floor(numRows * 0.4))
-    const body = Array.from({ length: INITIAL_SNAKE_LENGTH }, (_, i) => ({ x: startX - i, y: startY }))
+    const body = findSnakeStart(numWeeks, numRows, INITIAL_SNAKE_LENGTH)
+    pendingDirectionRef.current = null
+    directionRef.current = { x: 1, y: 0 }
     setSnake(body)
     setDirection({ x: 1, y: 0 })
     setGrowthLeft(0)
-    setEatenCount(0)
+    setGrayEatenCount(0)
     setRunState('running')
   }
 
   const handleReset = () => {
     setRunState('idle')
     setSnake([])
+    directionRef.current = { x: 1, y: 0 }
     setDirection({ x: 1, y: 0 })
     setGrowthLeft(0)
-    setEatenCount(0)
+    setGrayEatenCount(0)
     setActiveHit('')
     setClearedCells(new Set())
+    pendingDirectionRef.current = null
   }
 
   if (loadError) {
@@ -273,11 +275,11 @@ export function GitHubContributionGrid() {
 
   const ariaLabel = isReducedMotion
     ? totalLabel
-      ? `Decorative contribution squares forming the name Brian. Based on ${totalLabel}.`
-      : 'Decorative contribution squares forming the name Brian.'
+      ? `Decorative contribution squares with a snake game overlay. Based on ${totalLabel}.`
+      : 'Decorative contribution squares with a snake game overlay.'
     : totalLabel
-      ? `Animated GitHub contribution calendar: release a snake to eat non-Brian squares and reveal the name Brian. ${totalLabel}.`
-      : 'Animated GitHub contribution calendar: release a snake to eat non-Brian squares and reveal the name Brian.'
+      ? `Animated GitHub contribution calendar: control the snake with arrows or WASD to clear squares. ${totalLabel}.`
+      : 'Animated GitHub contribution calendar: control the snake with arrows or WASD to clear squares.'
 
   return (
     <div className="mb-8 w-full flex flex-col items-center gap-2">
@@ -309,7 +311,6 @@ export function GitHubContributionGrid() {
                 {(week.days || []).map((day, di) => {
                   const level = day.level || 'NONE'
                   const cls = LEVEL_CLASS[level] || LEVEL_CLASS.NONE
-                  const inName = nameMask.has(`${wi},${di}`)
                   const isCleared = clearedCells.has(`${wi},${di}`)
                   return (
                     <span
@@ -318,7 +319,7 @@ export function GitHubContributionGrid() {
                         'gh-contrib-cell rounded-[2px]',
                         cls,
                         activeHit === `${wi},${di}` ? 'gh-contrib-cell-hit' : '',
-                        !inName && isCleared ? 'gh-contrib-cell-cleared' : '',
+                        isCleared ? 'gh-contrib-cell-cleared' : '',
                       ]
                         .filter(Boolean)
                         .join(' ')}
@@ -340,7 +341,7 @@ export function GitHubContributionGrid() {
             disabled={runState !== 'idle'}
             className="gh-contrib-control"
           >
-            Release
+            Release Agent Snake
           </button>
           <button
             type="button"
