@@ -154,12 +154,19 @@ export function GitHubContributionGrid() {
         })
         if (!validDirs.length) return currentSnake
 
+        const recentHeadKeys = recentHeadKeysRef.current
         const scored = validDirs.map((d) => {
           const nx = head.x + d.x
           const ny = head.y + d.y
           const k = `${nx},${ny}`
           let score = d.x === direction.x && d.y === direction.y ? 2 : 0
           if (!clearedCells.has(k)) score += 3
+          if (d.x === -direction.x && d.y === -direction.y) score -= 4
+          const revisitIndex = recentHeadKeys.lastIndexOf(k)
+          if (revisitIndex !== -1) {
+            const age = recentHeadKeys.length - 1 - revisitIndex
+            score -= Math.max(1, 4 - Math.min(age, 3))
+          }
           return { d, score }
         })
         scored.sort((a, b) => b.score - a.score)
