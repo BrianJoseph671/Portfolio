@@ -159,6 +159,15 @@ export function GitHubContributionGrid() {
           const nx = head.x + d.x
           const ny = head.y + d.y
           const k = `${nx},${ny}`
+          const mobility = DIRECTIONS.reduce((count, md) => {
+            const fx = nx + md.x
+            const fy = ny + md.y
+            if (!(fx >= 0 && fx < numWeeks && fy >= 0 && fy < numRows)) return count
+            const futureKey = `${fx},${fy}`
+            if (nameMask.has(futureKey)) return count
+            if (currentSnake.some((s) => s.x === fx && s.y === fy)) return count
+            return count + 1
+          }, 0)
           let score = d.x === direction.x && d.y === direction.y ? 2 : 0
           if (!clearedCells.has(k)) score += 3
           if (d.x === -direction.x && d.y === -direction.y) score -= 4
@@ -167,10 +176,14 @@ export function GitHubContributionGrid() {
             const age = recentHeadKeys.length - 1 - revisitIndex
             score -= Math.max(1, 4 - Math.min(age, 3))
           }
-          return { d, score }
+          score += mobility
+          return { d, score, mobility }
         })
-        scored.sort((a, b) => b.score - a.score)
-        const top = scored.filter((s) => s.score === scored[0].score)
+        scored.sort((a, b) => b.score - a.score || b.mobility - a.mobility)
+        const topScore = scored[0].score
+        const scoreTied = scored.filter((s) => s.score === topScore)
+        const bestMobility = Math.max(...scoreTied.map((s) => s.mobility))
+        const top = scoreTied.filter((s) => s.mobility === bestMobility)
         const pick = top[Math.floor((Math.random() + randRef.current) * 1000) % top.length].d
         setDirection(pick)
 
