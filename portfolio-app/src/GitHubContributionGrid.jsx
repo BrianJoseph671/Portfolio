@@ -11,6 +11,7 @@ const LEVEL_CLASS = {
 const SNAKE_STEP_MS = 95
 const INITIAL_SNAKE_LENGTH = 4
 const REFRESH_MS = 5 * 60 * 1000
+const RECENT_HEAD_WINDOW = 24
 const DIRECTIONS = [
   { x: 1, y: 0 },
   { x: -1, y: 0 },
@@ -112,6 +113,7 @@ export function GitHubContributionGrid() {
   const numWeeks = data?.weeks?.length ?? 0
   const numRows = 7
   const randRef = useRef(Math.random())
+  const recentHeadKeysRef = useRef([])
   const nameMask = useMemo(() => makeBrianMask(numWeeks), [numWeeks])
   const clearTargets = useMemo(() => {
     if (!data?.weeks?.length) return []
@@ -166,6 +168,9 @@ export function GitHubContributionGrid() {
         setDirection(pick)
 
         const nextHead = { x: head.x + pick.x, y: head.y + pick.y }
+        const nextHeadKey = `${nextHead.x},${nextHead.y}`
+        const nextRecent = [...recentHeadKeysRef.current, nextHeadKey]
+        recentHeadKeysRef.current = nextRecent.slice(-RECENT_HEAD_WINDOW)
 
         const grownSnake = [nextHead, ...currentSnake]
         if (growthLeft > 0) {
@@ -226,6 +231,7 @@ export function GitHubContributionGrid() {
     const startX = Math.max(INITIAL_SNAKE_LENGTH - 1, Math.floor(numWeeks * 0.2))
     const startY = Math.max(1, Math.floor(numRows * 0.4))
     const body = Array.from({ length: INITIAL_SNAKE_LENGTH }, (_, i) => ({ x: startX - i, y: startY }))
+    recentHeadKeysRef.current = body.map((seg) => `${seg.x},${seg.y}`)
     setSnake(body)
     setDirection({ x: 1, y: 0 })
     setGrowthLeft(0)
@@ -241,6 +247,7 @@ export function GitHubContributionGrid() {
     setEatenCount(0)
     setActiveHit('')
     setClearedCells(new Set())
+    recentHeadKeysRef.current = []
   }
 
   if (loadError) {
