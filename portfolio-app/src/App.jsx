@@ -91,7 +91,7 @@ function App() {
                 </a>
               </div>
               <p className="theme-text-muted text-base leading-relaxed mb-5">
-                AI agent that automates inbound lead qualification, scheduling, and data syncing for HVAC service firms.
+                AI-powered lead capture and qualification for home services contractors, cutting response time from days to seconds.
               </p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
                 <div>
