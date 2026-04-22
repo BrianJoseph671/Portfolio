@@ -95,8 +95,20 @@ function App() {
               </p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 mb-5">
                 <div>
-                  <span className="theme-accent font-semibold">25% reduction</span>
-                  <span className="theme-text-muted text-sm ml-1">in scheduling and outreach workload</span>
+                  <span className="theme-text-muted text-sm">Uplift of </span>
+                  <span className="theme-accent font-semibold">5</span>
+                  <span className="theme-accent font-semibold"> leads/week</span>
+                  <span className="theme-text-muted text-sm"> captured</span>
+                  <br />
+                  <span className="theme-accent font-semibold">↑ 1</span>
+                  <span className="theme-accent font-semibold"> closed job</span>
+                  <span className="theme-text-muted text-sm"> every few weeks (</span>
+                  <span className="theme-accent font-semibold">$</span>
+                  <span className="theme-accent font-semibold">7</span>
+                  <span className="theme-text-muted text-sm">-</span>
+                  <span className="theme-accent font-semibold">18K</span>
+                  <span className="theme-accent font-semibold"> per job</span>
+                  <span className="theme-text-muted text-sm">)</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
